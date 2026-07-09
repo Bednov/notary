@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>PRO Нотариус 2026: Hands-Free Smart Trainer</title>
+  <title>PRO Нотариус 2026</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
@@ -39,21 +39,21 @@
     .header-bar {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 6px; background: var(--card-bg); border: 1px solid var(--border-color);
-      padding: 8px 10px; border-radius: 12px; flex-shrink: 0;
+      padding: 6px 10px; border-radius: 12px; flex-shrink: 0;
     }
 
     .brand-title { font-size: 0.85em; font-weight: 800; color: var(--accent-cyan); }
 
     .pill-btn {
       background: #1e293b; border: 1px solid var(--border-color); color: var(--text-main);
-      padding: 6px 8px; border-radius: 16px; font-size: 0.7em; font-weight: 600; cursor: pointer;
+      padding: 6px 8px; border-radius: 16px; font-size: 0.72em; font-weight: 600; cursor: pointer;
     }
     .pill-btn:active { background: var(--border-color); }
     .pill-btn.active-handsfree { background: var(--warning-amber); color: #000; animation: pulse 1.5s infinite; }
 
     @keyframes pulse {
       0% { opacity: 1; }
-      50% { opacity: 0.6; }
+      50% { opacity: 0.5; }
       100% { opacity: 1; }
     }
 
@@ -94,7 +94,6 @@
       padding: 10px 12px; border-radius: 10px; text-align: left; font-size: 0.88em;
       font-weight: 500; line-height: 1.3; cursor: pointer;
     }
-    .opt-button:active { background: var(--border-color); }
     .opt-button.correct { background: rgba(16, 185, 129, 0.25) !important; border-color: var(--success-green) !important; color: #34d399 !important; font-weight: 700; }
     .opt-button.wrong { background: rgba(239, 68, 68, 0.25) !important; border-color: var(--error-red) !important; color: #fca5a5 !important; }
 
@@ -115,12 +114,11 @@
       flex: 1; background: var(--accent-blue); color: #ffffff; border: none;
       padding: 12px; border-radius: 10px; font-weight: 700; font-size: 0.9em; cursor: pointer; text-align: center;
     }
-    .nav-btn:active { opacity: 0.8; }
     .nav-btn.secondary { background: #334155; }
 
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(11, 19, 41, 0.95); backdrop-filter: blur(8px);
+      background: rgba(11, 19, 41, 0.96); backdrop-filter: blur(10px);
       z-index: 100; display: none; flex-direction: column;
       padding: 16px; overflow-y: auto;
     }
@@ -131,7 +129,7 @@
     }
 
     .block-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
       gap: 8px; margin-top: 8px;
     }
 
@@ -140,7 +138,6 @@
       padding: 8px; border-radius: 8px; text-align: center; font-size: 0.8em;
       font-weight: 700; cursor: pointer;
     }
-    .block-btn:active { background: var(--accent-blue); color: #fff; }
   </style>
 </head>
 <body>
@@ -148,11 +145,10 @@
 <div id="app-container">
   
   <header class="header-bar">
-    <div class="brand-title">⚖️ PRO Нотариус</div>
+    <div class="brand-title">⚖️ Нотариус</div>
     <div style="display: flex; gap: 4px;">
       <button class="pill-btn" onclick="toggleHandsFreeMode()" id="handsfree-btn">🎧 Без рук</button>
       <button class="pill-btn" onclick="openTopicsModal()">📚 Темы</button>
-      <button class="pill-btn" style="color: #38bdf8;" onclick="exportDiagnosticLogs()">🐛 Лог</button>
       <button class="pill-btn" onclick="toggleSoundEngine()" id="sound-btn">🔊 Звук</button>
       <button class="pill-btn" onclick="resetFullState()" style="color: var(--error-red);">🗑️ Сброс</button>
     </div>
@@ -171,7 +167,7 @@
       <span class="counter-badge" id="ui-question-counter">0 / 0</span>
     </div>
     <div id="dynamic-content-root">
-      <div style="text-align: center; padding: 20px; color: var(--accent-cyan);">⏳ Загрузка базы из Excel...</div>
+      <div style="text-align: center; padding: 20px; color: var(--accent-cyan);">⏳ Загрузка вопросов из Excel...</div>
     </div>
   </article>
 
@@ -184,35 +180,33 @@
 </div>
 
 <div class="modal-overlay" id="topics-modal">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-    <h2 style="margin: 0; font-size: 1.1em; color: var(--accent-cyan);">📚 Каталог тем и блоков</h2>
-    <button class="pill-btn" onclick="closeTopicsModal()">✕ Закрыть</button>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; position: sticky; top: 0; background: var(--bg-color); padding: 8px 0; z-index: 10;">
+    <h2 style="margin: 0; font-size: 1.1em; color: var(--accent-cyan);">📚 Каталог тем</h2>
+    <button class="pill-btn" onclick="closeTopicsModal()" style="background: var(--accent-blue); padding: 8px 14px;">⬅️ Вернуться к тесту</button>
   </div>
   <div id="topics-list-container"></div>
 </div>
 
+<script src="legal_base.js"></script>
+
 <script>
-  /* ДИАГНОСТИКА И АУДИО */
-  const Logger = {
-    logs: [],
-    add(type, details) {
-      this.logs.push({ time: new Date().toISOString().substring(11, 19), type, details });
-      if (this.logs.length > 50) this.logs.shift();
-    }
-  };
-
-  window.onerror = (msg, url, line) => { Logger.add("JS_ERROR", `${msg} (line ${line})`); return false; };
-
-  function exportDiagnosticLogs() {
-    let report = `=== ЛОГ PRO НОТАРИУС ===\nИндекс: ${AppState.currentIndex}\nОтветов: ${AppState.totalAnswered}\n\n`;
-    Logger.logs.forEach(l => { report += `[${l.time}] [${l.type}] ${l.details}\n`; });
-    navigator.clipboard.writeText(report);
-    alert("🐛 Диагностический лог скопирован!");
-  }
-
+  /* АУДИО И УЛУЧШЕННЫЙ ЖЕНСКИЙ ГОЛОС */
   const AudioEngine = {
-    ctx: null, enabled: true, speechRate: 1.0, isSpeaking: false,
-    init() { if (!this.ctx) { const AudioCtx = window.AudioContext || window.webkitAudioContext; this.ctx = new AudioCtx(); } },
+    ctx: null, enabled: true, speechRate: 1.0, isSpeaking: false, selectedVoice: null,
+    init() {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+      }
+      this.findBestFemaleVoice();
+    },
+    findBestFemaleVoice() {
+      if (!('speechSynthesis' in window)) return;
+      const voices = window.speechSynthesis.getVoices();
+      // Поиск наилучшего женского голоса на русском
+      this.selectedVoice = voices.find(v => v.lang.includes('ru') && (v.name.includes('Tatiana') || v.name.includes('Milena') || v.name.includes('Katya') || v.name.includes('Yelda') || v.name.includes('Premium') || v.name.includes('Enhanced'))) 
+                        || voices.find(v => v.lang.includes('ru'));
+    },
     playCorrect() {
       if (!this.enabled) return; this.init();
       const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
@@ -237,9 +231,17 @@
     speakText(text, callback = null) {
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
+      
+      // Расстановка пауз для естественной дикции
+      let formattedText = text.replace(/([.,;:!?])/g, "$1 ");
+      
+      const utter = new SpeechSynthesisUtterance(formattedText);
       utter.lang = 'ru-RU';
       utter.rate = this.speechRate;
+      
+      if (!this.selectedVoice) this.findBestFemaleVoice();
+      if (this.selectedVoice) utter.voice = this.selectedVoice;
+
       this.isSpeaking = true;
       utter.onend = () => {
         this.isSpeaking = false;
@@ -249,37 +251,48 @@
     }
   };
 
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => AudioEngine.findBestFemaleVoice();
+  }
+
   function toggleSoundEngine() {
     AudioEngine.enabled = !AudioEngine.enabled;
     document.getElementById('sound-btn').innerText = AudioEngine.enabled ? "🔊 Звук" : "🔇 Звук";
   }
 
-  /* БАЗА ПРАКТИЧЕСКИХ ЗАДАЧ */
+  /* РАСШИРЕННАЯ БАЗА ПРАКТИЧЕСКИХ ЗАДАЧ */
   const TASKS_DATABASE = [
     {
       id: 201, topic: "📋 Практические задачи", type: "task",
-      title: "Практическая задача №1: Права на обязательную долю",
-      scenario: "К нотариусу обратился гражданин В. с завещанием умершего отца, в котором всё имущество завещано ему. Однако у наследодателя осталась нетрудоспособная супруга в возрасте 68 лет. Каковы действия нотариуса?",
+      title: "Практическая задача №1: Обязательная доля",
+      scenario: "К нотариусу обратился гражданин В. с завещанием отца на всё имущество. У наследодателя осталась нетрудоспособная супруга (68 лет). Действия нотариуса?",
       keywords: ["обязательная", "доля", "1149", "нетрудоспособн", "разъяснить", "свидетельство"],
       solution: { rule: "ст. 1149 ГК РФ", logic: "Нетрудоспособная супруга наследует не менее 1/2 доли от законной.", action: "Разъяснить право на обязательную долю и выдать свидетельство." }
     },
     {
       id: 202, topic: "📋 Практические задачи", type: "task",
-      title: "Практическая задача №2: Распоряжение имуществом супругов",
-      scenario: "Гражданин А. желает продать автомобиль, приобретенный в браке, но оформленный на его имя. Покупатель требует нотариальное согласие супруги. Обязан ли нотариус удостоверить такое согласие?",
+      title: "Практическая задача №2: Согласие супруга",
+      scenario: "Гражданин А. продает авто, приобретенное в браке. Покупатель просит согласие супруги. Обязан ли нотариус удостоверить согласие?",
       keywords: ["согласие", "35", "семейный", "супруг", "совместная", "удостоверить"],
-      solution: { rule: "ст. 35 СК РФ", logic: "По просьбе сторон нотариус удостоверяет нотариальное согласие супруга.", action: "Установить личность супруги, проверить факт брака и удостоверить согласие." }
+      solution: { rule: "ст. 35 СК РФ", logic: "По просьбе сторон нотариус удостоверяет согласие супруга на сделки.", action: "Удостоверить согласие супруги на отчуждение имущества." }
+    },
+    {
+      id: 203, topic: "📋 Практические задачи", type: "task",
+      title: "Практическая задача №3: Отмена доверенности",
+      scenario: "Доверитель решил отменить нотариальную доверенность. С какого момента она считается отмененной для третьих лиц?",
+      keywords: ["еис", "следующий", "день", "реестр", "189"],
+      solution: { rule: "ст. 189 ГК РФ", logic: "Сведения вносятся в ЕИС. Третьи лица считаются извещенными на следующий день.", action: "Внести сведения в ЕИС нотариата." }
     }
   ];
 
   let RAW_EXCEL_TESTS = [];
   const DEFAULT_STATE = { currentIndex: 0, totalAnswered: 0, correctCount: 0, errorIds: [], sessionQueue: [] };
-  let AppState = JSON.parse(localStorage.getItem('notary_full_v13')) || { ...DEFAULT_STATE };
+  let AppState = JSON.parse(localStorage.getItem('notary_full_v14')) || { ...DEFAULT_STATE };
   let isHandsFreeActive = false;
   let speechRecognizer = null;
 
   function syncStateToStorage() {
-    localStorage.setItem('notary_full_v13', JSON.stringify(AppState));
+    localStorage.setItem('notary_full_v14', JSON.stringify(AppState));
     renderDashboardUI();
   }
 
@@ -311,19 +324,23 @@
         });
 
         const correctIdx = row['Правильные ответы'] ? parseInt(row['Правильные ответы']) - 1 : 0;
+        const qId = row['Ид. №.1'] || idx + 1;
+
+        // Поиск расширенной статьи из внешнего справочника
+        const customLegal = (typeof LEGAL_BASE !== 'undefined' && LEGAL_BASE[qId]) ? LEGAL_BASE[qId] : {
+          rule: "Основы законодательства РФ о нотариате / ГК РФ",
+          logic: "Регулируется нормами действующего законодательства РФ.",
+          example: "Применяется при совершении нотариального действия."
+        };
 
         return {
-          id: row['Ид. №.1'] || idx + 1,
+          id: qId,
           topic: `Раздел ${row['Тема'] || 1}`,
           type: "test",
           question: String(row['Вопрос'] || '').trim(),
           options: options,
           correct: correctIdx >= 0 && correctIdx < options.length ? correctIdx : 0,
-          legalBasis: {
-            rule: "Основы нотариата / ГК РФ",
-            logic: "В соответствии с нормами действующего законодательства РФ.",
-            example: "Подлежит применению уполномоченным нотариусом."
-          }
+          legalBasis: customLegal
         };
       }).filter(q => q.question && q.options.length > 0);
 
@@ -377,7 +394,7 @@
 
   function startErrorReviewSession() {
     if (AppState.errorIds.length === 0) {
-      alert("У вас пока нет сохранённых ошибок!");
+      alert("У вас нет сохранённых ошибок!");
       return;
     }
     const errorQuestions = RAW_EXCEL_TESTS.filter(q => AppState.errorIds.includes(q.id));
@@ -459,7 +476,11 @@
       AppState.correctCount++;
       if (btnElement) btnElement.classList.add('correct');
       AudioEngine.playCorrect();
-      if (isHandsFreeActive) AudioEngine.speakText("Верно!");
+      if (isHandsFreeActive) {
+        AudioEngine.speakText("Верно!", () => {
+          setTimeout(navigateNext, 2500); // Автоперелистывание в режиме "Без рук" через 2.5 сек
+        });
+      }
     } else {
       if (!AppState.errorIds.includes(qId)) AppState.errorIds.push(qId);
       if (btnElement) btnElement.classList.add('wrong');
@@ -468,7 +489,9 @@
       document.getElementById('legal-hint-card').style.display = 'block';
       if (isHandsFreeActive) {
         const correctText = AppState.sessionQueue[AppState.currentIndex].options[correctIdx];
-        AudioEngine.speakText(`Ошибка. Правильный ответ: ${correctText}`);
+        AudioEngine.speakText(`Ошибка. Правильный ответ: ${correctText}`, () => {
+          setTimeout(navigateNext, 3500); // Даем время послушать ошибку перед переходом
+        });
       }
     }
     syncStateToStorage();
@@ -493,12 +516,16 @@
       AppState.errorIds = AppState.errorIds.filter(id => id !== q.id);
       verdictRoot.innerHTML = `<span style="color: var(--success-green);">✅ ИИ Оценка: Ответ верный!</span>`;
       AudioEngine.playCorrect();
-      if (isHandsFreeActive) AudioEngine.speakText("Ответ верный! Изучите разбор.");
+      if (isHandsFreeActive) {
+        AudioEngine.speakText("Ответ верный!", () => setTimeout(navigateNext, 3000));
+      }
     } else {
       if (!AppState.errorIds.includes(q.id)) AppState.errorIds.push(q.id);
-      verdictRoot.innerHTML = `<span style="color: var(--error-red);">⚠️ ИИ Оценка: Ответ неполный. Занесено в ошибки.</span>`;
+      verdictRoot.innerHTML = `<span style="color: var(--error-red);">⚠️ ИИ Оценка: Ответ неполный. Изучите норму ниже.</span>`;
       AudioEngine.playWrong();
-      if (isHandsFreeActive) AudioEngine.speakText("Ответ неполный. Изучите норму права.");
+      if (isHandsFreeActive) {
+        AudioEngine.speakText("Ответ неполный. Изучите норму права.", () => setTimeout(navigateNext, 4000));
+      }
     }
     syncStateToStorage();
   }
@@ -528,9 +555,7 @@
     renderCurrentQuestion();
   }
 
-  /* ==========================================================================
-     5. ИИ-РЕЖИМ «БЕЗ РУК» С ГОЛОСОВЫМИ КОМАНДАМИ (ПО ВАШИМ ПОЖЕЛАНИЯМ)
-     ========================================================================== */
+  /* ИИ-РЕЖИМ «БЕЗ РУК» С НАВИГАЦИЕЙ */
   function toggleHandsFreeMode() {
     isHandsFreeActive = !isHandsFreeActive;
     const btn = document.getElementById('handsfree-btn');
@@ -554,11 +579,11 @@
 
     let speechText = "";
     if (q.type === 'task') {
-      speechText = `${q.title}. ${q.scenario}. Надиктуйте ваше решение.`;
+      speechText = `${q.title}. ${q.scenario}. Надиктуйте решение.`;
     } else {
-      speechText = `Вопрос. ${q.question}. Варианты ответов: `;
+      speechText = `Вопрос: ${q.question}. Варианты: `;
       q.options.forEach((opt, idx) => {
-        speechText += `Вариант ${idx + 1}: ${opt}. `;
+        speechText += `${idx + 1}: ${opt}. `;
       });
     }
 
@@ -580,7 +605,6 @@
 
     speechRecognizer.onresult = (event) => {
       const command = event.results[0][0].transcript.toLowerCase().trim();
-      Logger.add("VOICE_CMD", command);
       handleVoiceCommand(command);
     };
 
@@ -601,7 +625,6 @@
   function handleVoiceCommand(cmd) {
     const q = AppState.sessionQueue[AppState.currentIndex];
 
-    // 1. Команды управления темпом речи
     if (cmd.includes("помедленнее") || cmd.includes("медленнее")) {
       AudioEngine.speechRate = Math.max(0.6, AudioEngine.speechRate - 0.2);
       AudioEngine.speakText("Повторяю помедленнее.", () => speakCurrentQuestionAndListen());
@@ -613,21 +636,19 @@
       return;
     }
 
-    // 2. Команда повтора вопроса
     if (cmd.includes("повтори") || cmd.includes("еще раз") || cmd.includes("ещё раз")) {
       speakCurrentQuestionAndListen();
       return;
     }
 
-    // 3. Команда запроса подсказки
     if (cmd.includes("подсказка") || cmd.includes("закон") || cmd.includes("норма")) {
       let hintText = q.type === 'task' ? q.solution.rule : q.legalBasis.rule;
       AudioEngine.speakText(`Правовое обоснование: ${hintText}`, () => startListeningCommands());
       return;
     }
 
-    // 4. Команды навигации
-    if (cmd.includes("дальше") || cmd.includes("следующий")) {
+    // Голосовые команды перехода
+    if (cmd.includes("дальше") || cmd.includes("вперед") || cmd.includes("вперёд") || cmd.includes("следующий")) {
       navigateNext();
       return;
     }
@@ -636,7 +657,6 @@
       return;
     }
 
-    // 5. Голосовой выбор ответов (1, 2, 3, 4)
     if (q.type === 'test') {
       let selectedOpt = -1;
       if (cmd.includes("первый") || cmd.includes("один")) selectedOpt = 0;
@@ -651,13 +671,12 @@
       }
     }
 
-    // Если команда не распознана — слушаем дальше
     if (isHandsFreeActive) {
       setTimeout(startListeningCommands, 500);
     }
   }
 
-  /* КАТАЛОГ ТЕМ И БЛОКОВ */
+  /* КАТАЛОГ ТЕМ */
   function openTopicsModal() {
     const topicsMap = {};
     RAW_EXCEL_TESTS.forEach(q => {
@@ -671,7 +690,7 @@
         <div style="font-weight: 700; font-size: 0.9em; color: var(--accent-cyan);">📋 Практические задачи</div>
         <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 2px;">Задачи с ИИ-оценкой голоса</div>
         <div class="block-grid">
-          <div class="block-btn" onclick="selectTopicBlock('📋 Практические задачи')" style="width: 100%;">Открыть задачи</div>
+          <div class="block-btn" onclick="selectTopicBlock('📋 Практические задачи')" style="width: 100%;">Открыть все задачи</div>
         </div>
       </div>
     `;
