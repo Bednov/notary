@@ -185,7 +185,7 @@
 </div>
 
 <script>
-  /* ГОЛОСОВОЙ И АУДИО ДВИЖОК */
+  /* ГОЛОСОВОЙ И АУДИО ДВИЖОК С ПОДДЕРЖКОЙ SIRI (ГОЛОС 2) */
   const AudioEngine = {
     ctx: null, enabled: true, speechRate: 1.0, isSpeaking: false, selectedVoice: null,
     init() {
@@ -198,8 +198,19 @@
     findBestFemaleVoice() {
       if (!('speechSynthesis' in window)) return;
       const voices = window.speechSynthesis.getVoices();
-      this.selectedVoice = voices.find(v => v.lang.includes('ru') && (v.name.includes('Tatiana') || v.name.includes('Milena') || v.name.includes('Katya') || v.name.includes('Yelda') || v.name.includes('Premium') || v.name.includes('Enhanced'))) 
-                        || voices.find(v => v.lang.includes('ru'));
+      
+      // Точный зават Siri (Голос 2) / Премиальных русских голосов iOS
+      this.selectedVoice = voices.find(v => 
+        v.lang.includes('ru') && (
+          v.name.includes('Siri') || 
+          v.name.includes('Voice 2') || 
+          v.name.includes('Voice2') ||
+          v.name.includes('ru-RU-a') ||
+          v.name.toLowerCase().includes('голос 2')
+        )
+      ) 
+      || voices.find(v => v.lang.includes('ru') && (v.name.includes('Milena') || v.name.includes('Tatiana') || v.name.includes('Premium')))
+      || voices.find(v => v.lang.includes('ru'));
     },
     playCorrect() {
       if (!this.enabled) return; this.init();
@@ -283,12 +294,12 @@
   let RAW_EXCEL_TESTS = [];
   let TASKS_DATABASE = [];
   const DEFAULT_STATE = { currentIndex: 0, totalAnswered: 0, correctCount: 0, errorIds: [], sessionQueue: [], savedMainSession: null };
-  let AppState = JSON.parse(localStorage.getItem('notary_core_v1')) || { ...DEFAULT_STATE };
+  let AppState = JSON.parse(localStorage.getItem('notary_core_v2')) || { ...DEFAULT_STATE };
   let isHandsFreeActive = false;
   let speechRecognizer = null;
 
   function syncStateToStorage() {
-    localStorage.setItem('notary_core_v1', JSON.stringify(AppState));
+    localStorage.setItem('notary_core_v2', JSON.stringify(AppState));
     renderDashboardUI();
   }
 
@@ -301,10 +312,8 @@
     }
   }
 
-  /* УНИВЕРСАЛЬНЫЙ АВТО-ПАРСЕР ВСЕХ ВНЕШНИХ ФАЙЛОВ ПРОЕКТА */
+  /* ДИНАМИЧЕСКАЯ ЗАГРУЗКА ДАННЫХ ИЗ ФАЙЛОВ НА GITHUB */
   async function loadExcelAndInit() {
-    let loadedItemsCount = 0;
-
     // 1. Парсинг Word документа Задачи_исправл 29.05.2021.docx
     try {
       const respDoc = await fetch(encodeURIComponent('Задачи_исправл 29.05.2021.docx'));
