@@ -109,12 +109,13 @@
       margin: 6px 0; resize: none; font-family: inherit;
     }
 
-    .bottom-nav { display: flex; gap: 8px; flex-shrink: 0; }
+    .bottom-nav { display: flex; gap: 6px; flex-shrink: 0; }
     .nav-btn {
       flex: 1; background: var(--accent-blue); color: #ffffff; border: none;
-      padding: 12px; border-radius: 10px; font-weight: 700; font-size: 0.9em; cursor: pointer; text-align: center;
+      padding: 12px 6px; border-radius: 10px; font-weight: 700; font-size: 0.85em; cursor: pointer; text-align: center;
     }
     .nav-btn.secondary { background: #334155; }
+    .nav-btn.home-btn { background: #0284c7; }
 
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -173,6 +174,7 @@
 
   <footer class="bottom-nav">
     <button class="nav-btn secondary" onclick="navigatePrevious()">⬅️ Назад</button>
+    <button class="nav-btn home-btn" onclick="restoreMainTestSession()">🏠 Мой тест</button>
     <button class="nav-btn secondary" onclick="triggerShuffleBlock()">🔀 Блок</button>
     <button class="nav-btn" onclick="navigateNext()">Вперёд ➡️</button>
   </footer>
@@ -256,10 +258,9 @@
     document.getElementById('sound-btn').innerText = AudioEngine.enabled ? "🔊 Звук" : "🔇 Звук";
   }
 
-  /* ГЕНЕРАТОР ПРАВОВЫХ ОБОСНОВАНИЙ ДЛЯ ВСЕХ 1 157 ВОПРОСОВ */
+  /* ГЕНЕРАТОР ПРАВОВЫХ ОБОСНОВАНИЙ */
   function generateLegalBasis(qText, topicId) {
     const text = qText.toLowerCase();
-    
     if (text.includes("наследств") || text.includes("завещ") || text.includes("открыт")) {
       return {
         rule: "Гражданский кодекс РФ (Раздел V. Наследственное право, ст. 1110 - 1185 ГК РФ)",
@@ -295,39 +296,53 @@
     };
   }
 
-  /* БАЗА ПРАКТИЧЕСКИХ ЗАДАЧ */
+  /* РАСШИРЕННАЯ ЭТАЛОННАЯ БАЗА ПРАКТИЧЕСКИХ ЗАДАЧ ИЗ ДОКУМЕНТА «ЭТАЛОН ЗАДАЧИ» */
   const TASKS_DATABASE = [
     {
       id: 201, topic: "📋 Практические задачи", type: "task",
-      title: "Практическая задача №1: Обязательная доля",
+      title: "Задача №1: Права на обязательную долю",
       scenario: "К нотариусу обратился гражданин В. с завещанием отца на всё имущество. У наследодателя осталась нетрудоспособная супруга (68 лет). Действия нотариуса?",
       keywords: ["обязательная", "доля", "1149", "нетрудоспособн", "разъяснить", "свидетельство"],
       solution: { rule: "ст. 1149 ГК РФ", logic: "Нетрудоспособная супруга наследует не менее 1/2 доли от законной.", action: "Разъяснить право на обязательную долю и выдать свидетельство." }
     },
     {
       id: 202, topic: "📋 Практические задачи", type: "task",
-      title: "Практическая задача №2: Согласие супруга",
+      title: "Задача №2: Согласие супруга на продажу авто",
       scenario: "Гражданин А. продает авто, приобретенное в браке. Покупатель просит согласие супруги. Обязан ли нотариус удостоверить согласие?",
       keywords: ["согласие", "35", "семейный", "супруг", "совместная", "удостоверить"],
       solution: { rule: "ст. 35 СК РФ", logic: "По просьбе сторон нотариус удостоверяет согласие супруга на сделки.", action: "Удостоверить согласие супруги на отчуждение имущества." }
     },
     {
       id: 203, topic: "📋 Практические задачи", type: "task",
-      title: "Практическая задача №3: Отмена доверенности",
+      title: "Задача №3: Сроки отмены нотариальной доверенности",
       scenario: "Доверитель решил отменить нотариальную доверенность. С какого момента она считается отмененной для третьих лиц?",
       keywords: ["еис", "следующий", "день", "реестр", "189"],
       solution: { rule: "ст. 189 ГК РФ", logic: "Сведения вносятся в ЕИС. Третьи лица считаются извещенными на следующий день.", action: "Внести сведения в ЕИС нотариата." }
+    },
+    {
+      id: 204, topic: "📋 Практические задачи", type: "task",
+      title: "Задача №4: Наследование по праву представления",
+      scenario: "Наследодатель умер, не оставив завещания. Его сын умер ранее наследодателя. У сына остались двоюродный брат и дочь. Кто наследует?",
+      keywords: ["представления", "внук", "дочь", "1142", "первая"],
+      solution: { rule: "ст. 1142 ГК РФ", logic: "Внуки наследуют по праву представления вместо умершего родителя.", action: "Выдать свидетельство о праве на наследство дочери умершего сына." }
+    },
+    {
+      id: 205, topic: "📋 Практические задачи", type: "task",
+      title: "Задача №5: Завещание в чрезвычайных обстоятельствах",
+      scenario: "Гражданин составил завещание в простой письменной форме в условиях явной угрозы жизни при двух свидетелях. В течение какого срока оно теряет силу, если гражданин выжил?",
+      keywords: ["месяц", "1129", "чрезвычайн", "угроза"],
+      solution: { rule: "ст. 1129 ГК РФ", logic: "Завещание теряет силу, если завещатель в течение 1 месяца после прекращения обстоятельств не совершит его в нотариальной форме.", action: "Разъяснить необходимость нотариального удостоверения в течение 1 месяца." }
     }
   ];
 
   let RAW_EXCEL_TESTS = [];
-  const DEFAULT_STATE = { currentIndex: 0, totalAnswered: 0, correctCount: 0, errorIds: [], sessionQueue: [] };
-  let AppState = JSON.parse(localStorage.getItem('notary_full_v15')) || { ...DEFAULT_STATE };
+  const DEFAULT_STATE = { currentIndex: 0, totalAnswered: 0, correctCount: 0, errorIds: [], sessionQueue: [], savedMainSession: null };
+  let AppState = JSON.parse(localStorage.getItem('notary_full_v16')) || { ...DEFAULT_STATE };
   let isHandsFreeActive = false;
   let speechRecognizer = null;
 
   function syncStateToStorage() {
-    localStorage.setItem('notary_full_v15', JSON.stringify(AppState));
+    localStorage.setItem('notary_full_v16', JSON.stringify(AppState));
     renderDashboardUI();
   }
 
@@ -389,6 +404,11 @@
   }
 
   function buildSessionQueue(filterTopic = null) {
+    // Сохраняем главную сессию перед переключением
+    if (!filterTopic && !AppState.savedMainSession) {
+      AppState.savedMainSession = { queue: AppState.sessionQueue, index: AppState.currentIndex };
+    }
+
     let tests = filterTopic ? RAW_EXCEL_TESTS.filter(q => q.topic === filterTopic) : [...RAW_EXCEL_TESTS];
     let tasks = [...TASKS_DATABASE];
 
@@ -419,6 +439,23 @@
     }
     AppState.sessionQueue = queue;
     AppState.currentIndex = 0;
+    
+    if (!filterTopic) {
+      AppState.savedMainSession = { queue: AppState.sessionQueue, index: AppState.currentIndex };
+    }
+  }
+
+  /* ВОЗВРАТ К ОСНОВНОМУ ТЕСТУ */
+  function restoreMainTestSession() {
+    if (AppState.savedMainSession && AppState.savedMainSession.queue && AppState.savedMainSession.queue.length > 0) {
+      AppState.sessionQueue = AppState.savedMainSession.queue;
+      AppState.currentIndex = AppState.savedMainSession.index || 0;
+    } else {
+      buildSessionQueue();
+    }
+    syncStateToStorage();
+    renderCurrentQuestion();
+    closeTopicsModal();
   }
 
   function startErrorReviewSession() {
