@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>PRO Нотариус 2026: Smart Trainer</title>
+  <!-- Подключаем библиотеку для чтения Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --bg-color: #0b1329;
@@ -47,7 +49,6 @@
       background: #1e293b; border: 1px solid var(--border-color); color: var(--text-main);
       padding: 6px 10px; border-radius: 16px; font-size: 0.72em; font-weight: 600; cursor: pointer;
     }
-    .pill-btn:active { background: var(--border-color); }
 
     .dashboard-grid {
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
@@ -86,7 +87,6 @@
       padding: 10px 12px; border-radius: 10px; text-align: left; font-size: 0.88em;
       font-weight: 500; line-height: 1.3; cursor: pointer;
     }
-    .opt-button:active { background: var(--border-color); }
     .opt-button.correct { background: rgba(16, 185, 129, 0.25) !important; border-color: var(--success-green) !important; color: #34d399 !important; font-weight: 700; }
     .opt-button.wrong { background: rgba(239, 68, 68, 0.25) !important; border-color: var(--error-red) !important; color: #fca5a5 !important; }
 
@@ -96,55 +96,20 @@
       font-size: 0.82em; line-height: 1.35;
     }
 
-    .task-speech-input {
-      width: 100%; background: #0f172a; border: 1px solid var(--border-color);
-      color: #ffffff; border-radius: 8px; padding: 8px; font-size: 0.85em;
-      margin: 6px 0; resize: none; font-family: inherit;
-    }
-
     .bottom-nav { display: flex; gap: 8px; flex-shrink: 0; }
     .nav-btn {
       flex: 1; background: var(--accent-blue); color: #ffffff; border: none;
       padding: 12px; border-radius: 10px; font-weight: 700; font-size: 0.9em; cursor: pointer; text-align: center;
     }
-    .nav-btn:active { opacity: 0.8; }
     .nav-btn.secondary { background: #334155; }
-
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(11, 19, 41, 0.95); backdrop-filter: blur(8px);
-      z-index: 100; display: none; flex-direction: column;
-      padding: 16px; overflow-y: auto;
-    }
-
-    .topic-card {
-      background: var(--card-bg); border: 1px solid var(--border-color);
-      border-radius: 12px; padding: 12px; margin-bottom: 10px;
-    }
-
-    .block-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 8px; margin-top: 8px;
-    }
-
-    .block-btn {
-      background: #1e293b; border: 1px solid var(--border-color); color: var(--accent-cyan);
-      padding: 8px; border-radius: 8px; text-align: center; font-size: 0.8em;
-      font-weight: 700; cursor: pointer;
-    }
-    .block-btn:active { background: var(--accent-blue); color: #fff; }
   </style>
 </head>
 <body>
 
 <div id="app-container">
-  
   <header class="header-bar">
-    <div class="brand-title">⚖️ PRO Нотариус</div>
+    <div class="brand-title">⚖️ PRO Нотариус 2026</div>
     <div style="display: flex; gap: 4px;">
-      <button class="pill-btn" onclick="openTopicsModal()">📚 Темы</button>
-      <button class="pill-btn" style="color: #38bdf8;" onclick="exportDiagnosticLogs()">🐛 Лог</button>
-      <button class="pill-btn" onclick="toggleSoundEngine()" id="sound-btn">🔊 Звук</button>
       <button class="pill-btn" onclick="resetFullState()" style="color: var(--error-red);">🗑️ Сброс</button>
     </div>
   </header>
@@ -153,132 +118,69 @@
     <div class="stat-box"><div class="stat-number" id="ui-answered-count" style="color: var(--accent-cyan);">0</div><div class="stat-label">Отвечено</div></div>
     <div class="stat-box"><div class="stat-number" id="ui-accuracy-rate" style="color: var(--success-green);">0%</div><div class="stat-label">Точность</div></div>
     <div class="stat-box"><div class="stat-number" id="ui-errors-count" style="color: var(--error-red);">0</div><div class="stat-label">В ошибках</div></div>
-    <div class="stat-box"><div class="stat-number" id="ui-day-count" style="color: var(--warning-amber);">1 / 60</div><div class="stat-label">День</div></div>
+    <div class="stat-box"><div class="stat-number" id="ui-total-questions" style="color: var(--warning-amber);">0</div><div class="stat-label">Всего</div></div>
   </section>
 
   <article class="quiz-card" id="quiz-card-element">
     <div class="meta-bar">
-      <span class="topic-badge" id="ui-topic-tag">📌 Раздел</span>
-      <span class="counter-badge" id="ui-question-counter">1 / 0</span>
+      <span class="topic-badge" id="ui-topic-tag">📌 Загрузка...</span>
+      <span class="counter-badge" id="ui-question-counter">0 / 0</span>
     </div>
-    <div id="dynamic-content-root"></div>
+    <div id="dynamic-content-root">
+      <div style="text-align: center; padding: 20px; color: var(--accent-cyan);">⏳ Загрузка вопросов из файла Excel...</div>
+    </div>
   </article>
 
   <footer class="bottom-nav">
     <button class="nav-btn secondary" onclick="navigatePrevious()">⬅️ Назад</button>
-    <button class="nav-btn secondary" onclick="triggerShuffleBlock()">🔀 Блок</button>
     <button class="nav-btn" onclick="navigateNext()">Вперёд ➡️</button>
   </footer>
-
 </div>
-
-<div class="modal-overlay" id="topics-modal">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-    <h2 style="margin: 0; font-size: 1.1em; color: var(--accent-cyan);">📚 Каталог тем и блоков</h2>
-    <button class="pill-btn" onclick="closeTopicsModal()">✕ Закрыть</button>
-  </div>
-  <div id="topics-list-container"></div>
-</div>
-
-<script src="questions.js"></script>
 
 <script>
-  const Logger = {
-    logs: [],
-    add(type, details) {
-      this.logs.push({ time: new Date().toISOString().substring(11, 19), type, details });
-      if (this.logs.length > 50) this.logs.shift();
+  let TEST_DATABASE = [];
+  const DEFAULT_STATE = { currentIndex: 0, totalAnswered: 0, correctCount: 0, errorIds: [] };
+  let AppState = JSON.parse(localStorage.getItem('notary_excel_v1')) || { ...DEFAULT_STATE };
+
+  // Автоматическая загрузка таблицы Excel
+  async function loadExcelData() {
+    try {
+      const fileName = encodeURIComponent('Актуальные вопросы в системе с октября 2020 года.xlsx');
+      const response = await fetch(fileName);
+      const arrayBuffer = await response.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rawData = XLSX.utils.sheet_to_json(firstSheet);
+
+      TEST_DATABASE = rawData.map((row, idx) => {
+        const options = [];
+        ['Ответ №1', 'Ответ №2', 'Ответ №3', 'Ответ №4', 'Ответ№5', 'Ответ№6'].forEach(col => {
+          if (row[col] && String(row[col]).trim() !== '') {
+            options.push(String(row[col]).trim());
+          }
+        });
+
+        const correctIdx = row['Правильные ответы'] ? parseInt(row['Правильные ответы']) - 1 : 0;
+
+        return {
+          id: row['Ид. №.1'] || idx + 1,
+          topic: `Раздел ${row['Тема'] || 1}`,
+          question: String(row['Вопрос'] || '').trim(),
+          options: options,
+          correct: correctIdx >= 0 && correctIdx < options.length ? correctIdx : 0
+        };
+      }).filter(q => q.question && q.options.length > 0);
+
+      document.getElementById('ui-total-questions').innerText = TEST_DATABASE.length;
+      renderCurrentQuestion();
+      renderDashboardUI();
+    } catch (err) {
+      document.getElementById('dynamic-content-root').innerHTML = `
+        <div style="color: var(--error-red); padding: 10px; text-align: center;">
+          ⚠️ Ошибка загрузки файла Excel.<br>Убедитесь, что файл "Актуальные вопросы в системе с октября 2020 года.xlsx" загружен в репозиторий GitHub.
+        </div>
+      `;
     }
-  };
-
-  window.onerror = (msg, url, line) => { Logger.add("JS_ERROR", `${msg} (line ${line})`); return false; };
-
-  function exportDiagnosticLogs() {
-    let report = `=== ЛОГ PRO НОТАРИУС ===\nИндекс: ${AppState.currentIndex}\nОтветов: ${AppState.totalAnswered}\n\n`;
-    Logger.logs.forEach(l => { report += `[${l.time}] [${l.type}] ${l.details}\n`; });
-    navigator.clipboard.writeText(report);
-    alert("🐛 Диагностический лог скопирован!");
-  }
-
-  const AudioEngine = {
-    ctx: null, enabled: true,
-    init() { if (!this.ctx) { const AudioCtx = window.AudioContext || window.webkitAudioContext; this.ctx = new AudioCtx(); } },
-    playCorrect() {
-      if (!this.enabled) return; this.init();
-      const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-      osc.connect(gain); gain.connect(this.ctx.destination);
-      osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(659.25, this.ctx.currentTime + 0.12);
-      gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
-      osc.start(); osc.stop(this.ctx.currentTime + 0.12);
-    },
-    playWrong() {
-      if (!this.enabled) return; this.init();
-      const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-      osc.connect(gain); gain.connect(this.ctx.destination);
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(160, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.18);
-      gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
-      osc.start(); osc.stop(this.ctx.currentTime + 0.18);
-    }
-  };
-
-  function toggleSoundEngine() {
-    AudioEngine.enabled = !AudioEngine.enabled;
-    document.getElementById('sound-btn').innerText = AudioEngine.enabled ? "🔊 Звук" : "🔇 Звук";
-  }
-
-  const DEFAULT_STATE = { currentIndex: 0, totalAnswered: 0, correctCount: 0, errorIds: [], sessionQueue: [] };
-  let AppState = JSON.parse(localStorage.getItem('notary_db_v5')) || { ...DEFAULT_STATE };
-
-  function syncStateToStorage() {
-    localStorage.setItem('notary_db_v5', JSON.stringify(AppState));
-    renderDashboardUI();
-  }
-
-  function resetFullState() {
-    if (confirm("Сбросить весь прогресс?")) {
-      AppState = { ...DEFAULT_STATE }; buildSessionQueue(); syncStateToStorage(); renderCurrentQuestion();
-    }
-  }
-
-  function buildSessionQueue(filterTopic = null) {
-    if (typeof TEST_DATABASE === 'undefined' || typeof TASKS_DATABASE === 'undefined') {
-      alert("База вопросов еще не загружена в questions.js!");
-      return;
-    }
-
-    let tests = filterTopic ? TEST_DATABASE.filter(q => q.topic === filterTopic) : [...TEST_DATABASE];
-    let tasks = filterTopic ? TASKS_DATABASE.filter(q => q.topic === filterTopic) : [...TASKS_DATABASE];
-
-    if (tests.length === 0) tests = [...TEST_DATABASE];
-    if (tasks.length === 0) tasks = [...TASKS_DATABASE];
-
-    tests = tests.sort(() => Math.random() - 0.5);
-    tasks = tasks.sort(() => Math.random() - 0.5);
-
-    let queue = [], testIdx = 0, taskIdx = 0;
-    let limit = Math.max(tests.length + tasks.length, 20);
-
-    for (let i = 1; i <= limit; i++) {
-      if (i % 20 === 0) {
-        let t = tasks[taskIdx % tasks.length];
-        queue.push({ ...t, uniqueKey: 'task_' + i + '_' + t.id }); taskIdx++;
-      } else {
-        let q = tests[testIdx % tests.length];
-        queue.push({ ...q, uniqueKey: 'test_' + i + '_' + q.id }); testIdx++;
-      }
-    }
-    AppState.sessionQueue = queue;
-    AppState.currentIndex = 0;
-  }
-
-  function initApp() {
-    if (!AppState.sessionQueue || AppState.sessionQueue.length === 0) buildSessionQueue();
-    renderCurrentQuestion(); renderDashboardUI();
   }
 
   function renderDashboardUI() {
@@ -289,51 +191,23 @@
   }
 
   function renderCurrentQuestion() {
-    if (!AppState.sessionQueue || AppState.sessionQueue.length === 0) return;
-    if (AppState.currentIndex >= AppState.sessionQueue.length) AppState.currentIndex = 0;
-    const q = AppState.sessionQueue[AppState.currentIndex];
+    if (TEST_DATABASE.length === 0) return;
+    if (AppState.currentIndex >= TEST_DATABASE.length) AppState.currentIndex = 0;
 
+    const q = TEST_DATABASE[AppState.currentIndex];
     document.getElementById('ui-topic-tag').innerText = q.topic;
-    document.getElementById('ui-question-counter').innerText = `${AppState.currentIndex + 1} / ${AppState.sessionQueue.length}`;
-    const root = document.getElementById('dynamic-content-root');
+    document.getElementById('ui-question-counter').innerText = `${AppState.currentIndex + 1} / ${TEST_DATABASE.length}`;
 
-    if (q.type === 'task') {
-      root.innerHTML = `
-        <div style="background: #0f172a; border: 1px dashed var(--accent-blue); padding: 12px; border-radius: 10px;">
-          <h3 style="margin: 0 0 6px 0; color: var(--accent-cyan); font-size: 0.9em;">📋 ${q.title}</h3>
-          <p style="font-size: 0.85em; line-height: 1.35; color: #cbd5e1; margin-bottom: 8px;">${q.scenario}</p>
-          <label style="font-size: 0.72em; color: var(--text-muted); font-weight: 600;">Надиктуйте или введите ответ (🎙️ на клавиатуре):</label>
-          <textarea id="task-speech-field" class="task-speech-input" rows="2" placeholder="Ваше решение задачи..."></textarea>
-          <button class="nav-btn" style="width: 100%; padding: 8px; background: #0284c7; margin-top: 4px;" onclick="processAIEvaluation()">⚖️ Проверить ответ через ИИ</button>
-          <div id="ai-feedback-panel" class="legal-analysis-box">
-            <div id="ai-verdict-text" style="font-weight: bold; margin-bottom: 4px;"></div>
-            <p style="margin: 2px 0;"><b>📜 Норма права:</b> ${q.solution.rule}</p>
-            <p style="margin: 2px 0;"><b>🧠 Логика:</b> ${q.solution.logic}</p>
-            <p style="margin: 2px 0;"><b>💡 Действие:</b> ${q.solution.action}</p>
-          </div>
-        </div>
-      `;
-    } else {
-      let optionsHTML = q.options.map((opt, idx) => `
-        <button class="opt-button" onclick="handleOptionSelect(${idx}, ${q.correct}, ${q.id}, this)">
-          ${idx + 1}. ${opt}
-        </button>
-      `).join('');
+    let optionsHTML = q.options.map((opt, idx) => `
+      <button class="opt-button" onclick="handleOptionSelect(${idx}, ${q.correct}, ${q.id}, this)">
+        ${idx + 1}. ${opt}
+      </button>
+    `).join('');
 
-      root.innerHTML = `
-        <div class="question-text">${q.question}</div>
-        <div class="answers-container">${optionsHTML}</div>
-        <button class="pill-btn" style="margin-top: 10px; width: 100%; text-align: center;" onclick="toggleLegalHint()">
-          ⚖️ Развёрнутое правовое обоснование
-        </button>
-        <div id="legal-hint-card" class="legal-analysis-box">
-          <p style="margin: 0 0 3px 0;"><b>📜 Норма права:</b> ${q.legalBasis.rule}</p>
-          <p style="margin: 0 0 3px 0;"><b>🧠 Логика:</b> ${q.legalBasis.logic}</p>
-          <p style="margin: 0;"><b>💡 Пример:</b> ${q.legalBasis.example}</p>
-        </div>
-      `;
-    }
-    document.getElementById('quiz-card-element').scrollTop = 0;
+    document.getElementById('dynamic-content-root').innerHTML = `
+      <div class="question-text">${q.question}</div>
+      <div class="answers-container">${optionsHTML}</div>
+    `;
   }
 
   function handleOptionSelect(selectedIdx, correctIdx, qId, btnElement) {
@@ -343,105 +217,39 @@
     if (selectedIdx === correctIdx) {
       AppState.correctCount++;
       btnElement.classList.add('correct');
-      AudioEngine.playCorrect();
-      syncStateToStorage();
       setTimeout(() => { navigateNext(); }, 500);
     } else {
       if (!AppState.errorIds.includes(qId)) AppState.errorIds.push(qId);
       btnElement.classList.add('wrong');
       if (allButtons[correctIdx]) allButtons[correctIdx].classList.add('correct');
-      AudioEngine.playWrong();
-      document.getElementById('legal-hint-card').style.display = 'block';
-      syncStateToStorage();
     }
-  }
-
-  function processAIEvaluation() {
-    const userInput = document.getElementById('task-speech-field').value.trim().toLowerCase();
-    if (!userInput) { alert("Сначала надиктуйте или введите ответ!"); return; }
-
-    const q = AppState.sessionQueue[AppState.currentIndex];
-    let matched = 0;
-    if (q.keywords) {
-      q.keywords.forEach(kw => { if (userInput.includes(kw.toLowerCase())) matched++; });
-    }
-
-    const verdictRoot = document.getElementById('ai-verdict-text');
-    document.getElementById('ai-feedback-panel').style.display = 'block';
-    AppState.totalAnswered++;
-
-    if (matched >= 1) {
-      AppState.correctCount++;
-      AppState.errorIds = AppState.errorIds.filter(id => id !== q.id);
-      verdictRoot.innerHTML = `<span style="color: var(--success-green);">✅ ИИ Оценка: Ответ верный! Переход...</span>`;
-      AudioEngine.playCorrect();
-      syncStateToStorage();
-      setTimeout(() => { navigateNext(); }, 1500);
-    } else {
-      if (!AppState.errorIds.includes(q.id)) AppState.errorIds.push(q.id);
-      verdictRoot.innerHTML = `<span style="color: var(--error-red);">⚠️ ИИ Оценка: Ответ неполный. Изучите норму ниже.</span>`;
-      AudioEngine.playWrong();
-      syncStateToStorage();
-    }
-  }
-
-  function toggleLegalHint() {
-    const hint = document.getElementById('legal-hint-card');
-    hint.style.display = (hint.style.display === 'block') ? 'none' : 'block';
+    localStorage.setItem('notary_excel_v1', JSON.stringify(AppState));
+    renderDashboardUI();
   }
 
   function navigateNext() {
-    if (AppState.currentIndex < AppState.sessionQueue.length - 1) AppState.currentIndex++;
+    if (AppState.currentIndex < TEST_DATABASE.length - 1) AppState.currentIndex++;
     else AppState.currentIndex = 0;
-    syncStateToStorage(); renderCurrentQuestion();
+    localStorage.setItem('notary_excel_v1', JSON.stringify(AppState));
+    renderCurrentQuestion();
   }
 
   function navigatePrevious() {
     if (AppState.currentIndex > 0) AppState.currentIndex--;
-    syncStateToStorage(); renderCurrentQuestion();
+    localStorage.setItem('notary_excel_v1', JSON.stringify(AppState));
+    renderCurrentQuestion();
   }
 
-  function triggerShuffleBlock() {
-    buildSessionQueue(); AppState.currentIndex = 0;
-    syncStateToStorage(); renderCurrentQuestion();
-  }
-
-  function openTopicsModal() {
-    const topicsMap = {};
-    TEST_DATABASE.forEach(q => {
-      if (!topicsMap[q.topic]) topicsMap[q.topic] = 0;
-      topicsMap[q.topic]++;
-    });
-
-    const container = document.getElementById('topics-list-container');
-    let html = "";
-
-    for (let topic in topicsMap) {
-      let count = topicsMap[topic];
-      let blocksCount = Math.ceil(count / 20) || 1;
-      let blocksHTML = "";
-      for (let b = 1; b <= blocksCount; b++) {
-        blocksHTML += `<div class="block-btn" onclick="selectTopicBlock('${topic}')">Блок ${b}</div>`;
-      }
-      html += `
-        <div class="topic-card">
-          <div style="font-weight: 700; font-size: 0.9em; color: var(--accent-cyan);">${topic}</div>
-          <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 2px;">Вопросов в теме: ${count}</div>
-          <div class="block-grid">${blocksHTML}</div>
-        </div>
-      `;
+  function resetFullState() {
+    if (confirm("Сбросить весь прогресс?")) {
+      AppState = { ...DEFAULT_STATE };
+      localStorage.setItem('notary_excel_v1', JSON.stringify(AppState));
+      renderCurrentQuestion();
+      renderDashboardUI();
     }
-    container.innerHTML = html;
-    document.getElementById('topics-modal').style.display = 'flex';
   }
 
-  function closeTopicsModal() { document.getElementById('topics-modal').style.display = 'none'; }
-
-  function selectTopicBlock(topic) {
-    buildSessionQueue(topic); syncStateToStorage(); renderCurrentQuestion(); closeTopicsModal();
-  }
-
-  window.onload = initApp;
+  window.onload = loadExcelData;
 </script>
 </body>
 </html>
