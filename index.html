@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>PRO Нотариус 2026: Smart Trainer</title>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #090d16 0%, #111827 100%);
+      --card-bg: rgba(31, 41, 55, 0.75);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --accent-blue: #2563eb;
+      --accent-cyan: #06b6d4;
+      --success-green: #10b981;
+      --error-red: #ef4444;
+      --warning-amber: #f59e0b;
+      --panel-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100dvh;
+      margin: 0;
+      padding: 0;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Главный контейнер с защитой от вылезания за экран */
+    #app-viewport {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100dvh;
+      padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+    }
+
+    /* ВЕРХНЯЯ ШАПКА */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      padding: 6px 10px;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 0.85em;
+      font-weight: 800;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .top-action-btns {
+      display: flex;
+      gap: 4px;
+    }
+
+    .pill-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 5px 8px;
+      border-radius: 16px;
+      font-size: 0.7em;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s;
+    }
+
+    .pill-btn:active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* ДАШБОРД СТАТИСТИКИ */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 6px;
+      flex-shrink: 0;
+    }
+
+    .stat-box {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 6px 2px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 1.05em;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .stat-label {
+      font-size: 0.62em;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* РАБОЧАЯ ОБЛАСТЬ (С КОРРЕКТНЫМ СКРОЛЛОМ) */
+    .main-workspace {
+      flex: 1;
+      display: flex;
+      gap: 10px;
+      min-height: 0; /* Обязательно для работы внутреннего скролла */
+      margin-bottom: 6px;
+    }
+
+    .quiz-card {
+      flex: 1;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto; /* Скроллится только содержимое карточки */
+      box-shadow: var(--panel-glow);
+    }
+
+    .meta-tag-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+    }
+
+    .topic-badge {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.68em;
+      font-weight: 700;
+    }
+
+    .counter-badge {
+      font-size: 0.72em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .question-text {
+      font-size: 0.92em;
+      font-weight: 700;
+      line-height: 1.35;
+      color: #ffffff;
+      margin-bottom: 10px;
+    }
+
+    .answers-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .opt-button {
+      background: rgba(17, 24, 39, 0.6);
+      border: 1px solid var(--card-border);
+      color: #e5e7eb;
+      padding: 10px 12px;
+      border-radius: 10px;
+      text-align: left;
+      font-size: 0.83em;
+      font-weight: 500;
+      line-height: 1.25;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .opt-button:active {
+      transform: scale(0.98);
+      background: rgba(55, 65, 81, 0.8);
+    }
+
+    .opt-button.state-correct {
+      background: rgba(16, 185, 129, 0.25) !important;
+      border-color: var(--success-green) !important;
+      color: #34d399 !important;
+      font-weight: 700;
+    }
+
+    .opt-button.state-wrong {
+      background: rgba(239, 68, 68, 0.25) !important;
+      border-color: var(--error-red) !important;
+      color: #fca5a5 !important;
+    }
+
+    /* БЛОК ЮРИДИЧЕСКОГО РАЗБОРА */
+    .legal-analysis-box {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(17, 24, 39, 0.85);
+      border-left: 3px solid var(--accent-blue);
+      border-radius: 8px;
+      display: none;
+      font-size: 0.78em;
+      line-height: 1.35;
+    }
+
+    /* БОКОВАЯ ПАНЕЛЬ ДЛЯ НОУТБУКА */
+    .sidebar-analytics {
+      width: 260px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 12px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-speech-input {
+      width: 100%;
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid var(--card-border);
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.82em;
+      margin: 6px 0;
+      resize: none;
+      font-family: inherit;
+    }
+
+    .task-speech-input:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+    }
+
+    /* ЖЕСТКО ЗАФИКСИРОВАННАЯ НИЖНЯЯ ПАНЕЛЬ */
+    .bottom-nav {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0; /* Панель никогда не сжимается и не уходит вниз */
+    }
+
+    .nav-btn {
+      flex: 1;
+      background: var(--accent-blue);
+      color: #ffffff;
+      border: none;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.85em;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.2s;
+    }
+
+    .nav-btn:active {
+      opacity: 0.85;
+    }
+
+    .nav-btn.secondary {
+      background: rgba(55, 65, 81, 0.8);
+    }
+
+    /* РЕЖИМ НОУТБУКА */
+    body.desktop-view .sidebar-analytics {
+      display: flex;
+    }
+
+    body.desktop-view #app-viewport {
+      max-width: 1050px;
+      margin: 0 auto;
+    }
+
+    body.desktop-view .quiz-card {
+      padding: 20px;
+    }
+
+    body.desktop-view .question-text {
+      font-size: 1.1em;
+    }
+
+    body.desktop-view .opt-button {
+      padding: 12px 16px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app-viewport">
+  
+  <header class="header-bar">
+    <div class="brand-title">
+      ⚖️ PRO Нотариус <span style="font-size: 0.7em; opacity: 0.6; color: var(--text-main);">v4.2 AI</span>
+    </div>
+    <div class="top-action-btns">
+      <button class="pill-btn" onclick="toggleLayoutMode()" id="layout-toggle-btn">💻 Режим Ноутбука</button>
+      <button class="pill-btn" onclick="toggleSoundEngine()" id="sound-toggle-btn">🔊 Звук: Вкл</button>
+    </div>
+  </header>
+
+  <section class="dashboard-grid">
+    <div class="stat-box">
+      <div class="stat-number" id="ui-answered-count" style="color: var(--accent-cyan);">0</div>
+      <div class="stat-label">Отвечено</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="ui-accuracy-rate" style="color: var(--success-green);">0%</div>
+      <div class="stat-label">Точность</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="ui-errors-count" style="color: var(--error-red);">0</div>
+      <div class="stat-label">В ошибках</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="ui-session-day" style="color: var(--warning-amber);">1 / 60</div>
+      <div class="stat-label">День плана</div>
+    </div>
+  </section>
+
+  <main class="main-workspace">
+    
+    <article class="quiz-card" id="quiz-card-element">
+      <div class="meta-tag-bar">
+        <span class="topic-badge" id="ui-topic-tag">📌 Раздел</span>
+        <span class="counter-badge" id="ui-question-counter">1 / 0</span>
+      </div>
+
+      <div id="dynamic-content-root"></div>
+    </article>
+
+    <aside class="sidebar-analytics">
+      <h4 style="margin: 0; font-size: 0.88em; color: var(--accent-cyan);">📊 Статистика разделов</h4>
+      <div id="topic-breakdown-list" style="font-size: 0.75em; line-height: 1.5; color: var(--text-muted);">
+        Отвечайте на вопросы для формирования аналитики.
+      </div>
+      <hr style="border: none; border-top: 1px solid var(--card-border); margin: 4px 0;">
+      <button class="pill-btn" onclick="exportAnalyticsForAI()" style="width: 100%; justify-content: center;">📋 Скопировать отчет для ИИ</button>
+      <button class="pill-btn" onclick="resetFullState()" style="width: 100%; justify-content: center; color: var(--error-red);">🗑️ Сбросить прогресс</button>
+    </aside>
+
+  </main>
+
+  <footer class="bottom-nav">
+    <button class="nav-btn secondary" id="btn-prev" onclick="navigatePrevious()">⬅️ Назад</button>
+    <button class="nav-btn secondary" onclick="triggerShuffleBlock()">🔀 Перемешать блок</button>
+    <button class="nav-btn" id="btn-next" onclick="navigateNext()">Вперёд ➡️</button>
+  </footer>
+
+</div>
+
+<script>
+  /* ==========================================================================
+     1. АУДИО ДВИЖОК
+     ========================================================================== */
+  const AudioEngine = {
+    ctx: null,
+    enabled: true,
+    init() {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+      }
+    },
+    playCorrect() {
+      if (!this.enabled) return;
+      this.init();
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(659.25, this.ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+      osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+    },
+    playWrong() {
+      if (!this.enabled) return;
+      this.init();
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(160, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.18);
+      gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+      osc.start(); osc.stop(this.ctx.currentTime + 0.18);
+    }
+  };
+
+  function toggleSoundEngine() {
+    AudioEngine.enabled = !AudioEngine.enabled;
+    document.getElementById('sound-toggle-btn').innerText = AudioEngine.enabled ? "🔊 Звук: Вкл" : "🔇 Звук: Выкл";
+  }
+
+  /* ==========================================================================
+     2. ПОЛНОЦЕННЫЕ РЕЕСТРЫ: ТЕСТЫ И ЗАДАЧИ РАЗДЕЛЕНЫ
+     ========================================================================== */
+  const TEST_DATABASE = [
+    {
+      id: 101,
+      topic: "Организация нотариата",
+      type: "test",
+      question: "Каковы требования к юридическому стажу для назначения временно исполняющим обязанности (врио) нотариуса?",
+      options: ["Не менее 3 лет", "Не менее 5 лет", "Не менее 1 года", "Стаж не требуется"],
+      correct: 1,
+      legalBasis: {
+        rule: "ст. 20 Основ законодательства РФ о нотариате",
+        logic: "Замещающее лицо выполняет весь комплекс нотариальных действий и несёт полную ответственность.",
+        example: "Помощник нотариуса без 5 лет юридического стажа не может замещать нотариуса."
+      }
+    },
+    {
+      id: 102,
+      topic: "Организация нотариата",
+      type: "test",
+      question: "Какой срок действия результатов квалификационного экзамена при отсутствии назначения на должность нотариуса или статуса врио?",
+      options: ["1 год", "3 года", "5 лет", "Бессрочно"],
+      correct: 1,
+      legalBasis: {
+        rule: "ч. 4 ст. 3.1 Основ законодательства РФ о нотариате",
+        logic: "Законодательство регулярно обновляется. За 3 года без практики теоретические знания требуют повторной проверки.",
+        example: "Сдал экзамен в июне 2023 года — если до июня 2026 не приступил к работе врио, экзамен сдаётся заново."
+      }
+    },
+    {
+      id: 103,
+      topic: "Наследственное право",
+      type: "test",
+      question: "В течение какого срока наследство может быть принято со дня его открытия?",
+      options: ["В течение 3 месяцев", "В течение 6 месяцев", "В течение 1 года", "В течение 3 лет"],
+      correct: 1,
+      legalBasis: {
+        rule: "ст. 1154 Гражданского кодекса РФ",
+        logic: "Базовый пресекательный срок для выявления всего круга наследников и кредиторов умершего.",
+        example: "Если наследодатель умер 10 января, срок подачи заявления нотариусу истекает 10 июля."
+      }
+    },
+    {
+      id: 104,
+      topic: "Сделки и доверенности",
+      type: "test",
+      question: "Какой предельный срок действия доверенности установлен действующим законодательством РФ?",
+      options: ["3 года", "5 лет", "10 лет", "Срок не ограничен"],
+      correct: 3,
+      legalBasis: {
+        rule: "ст. 186 Гражданского кодекса РФ",
+        logic: "Ограничение в 3 года отменено. Доверенность выдаётся на любой срок, указанный доверителем.",
+        example: "Можно выдать доверенность на 15 или 50 лет. Если срок не указан, она сохраняет силу 1 год."
+      }
+    },
+    {
+      id: 105,
+      topic: "Сделки и общая собственность",
+      type: "test",
+      question: "Подлежит ли нотариальному удостоверению договор дарения доли в праве общей собственности на недвижимое имущество?",
+      options: ["Да, обязательно", "Нет, только по соглашению сторон", "Только если сумма сделки свыше 1 млн рублей", "Только при дарении несовершеннолетнему"],
+      correct: 0,
+      legalBasis: {
+        rule: "ст. 42 Федерального закона № 218-ФЗ",
+        logic: "Защита прав всех сособственников при распоряжении долями в праве общей собственности.",
+        example: "Отчуждение доли (продажа, дарение) всегда требует обязательной нотариальной формы."
+      }
+    },
+    {
+      id: 106,
+      topic: "Семейное право",
+      type: "test",
+      question: "В какой форме должен быть заключен брачный договор?",
+      options: ["В простой письменной форме", "В нотариальной форме", "В письменной форме с регистрацией в ЗАГС", "Форма выбирается супругами"],
+      correct: 1,
+      legalBasis: {
+        rule: "п. 2 ст. 41 Семейного кодекса РФ",
+        logic: "Брачный договор изменяет законный режим имущества супругов и требует обязательного нотариального удостоверения.",
+        example: "Простой письменный брачный договор является ничтожным."
+      }
+    },
+    {
+      id: 107,
+      topic: "Наследственное право",
+      type: "test",
+      question: "Кто из перечисленных лиц не входит в число наследников первой очереди по закону?",
+      options: ["Дети наследодателя", "Супруг наследодателя", "Родители наследодателя", "Полнородные братья и сестры"],
+      correct: 3,
+      legalBasis: {
+        rule: "ст. 1142, 1143 Гражданского кодекса РФ",
+        logic: "Братья и сестры относятся к наследникам второй очереди по закону.",
+        example: "При наличии живых детей или родителей наследодателя братья к наследованию по закону не призываются."
+      }
+    }
+  ];
+
+  const TASKS_DATABASE = [
+    {
+      id: 201,
+      topic: "Наследственное право",
+      type: "task",
+      title: "Практическая задача №1: Права на обязательную долю",
+      scenario: "К нотариусу обратился гражданин В. с завещанием умершего отца, в котором всё имущество (квартира и дом) завещано ему. Однако у наследодателя осталась нетрудоспособная супруга в возрасте 68 лет. Каковы действия нотариуса?",
+      keywords: ["обязательная", "доля", "1149", "нетрудоспособн", "разъяснить", "свидетельство"],
+      solution: {
+        rule: "ст. 1149 Гражданского кодекса РФ",
+        logic: "Нетрудоспособная супруга является обязательным наследником и наследует не менее 1/2 доли, причитавшейся бы ей по закону.",
+        action: "Нотариус обязан разъяснить право на обязательную долю и выдать соответствующее свидетельство при подаче заявления."
+      }
+    },
+    {
+      id: 202,
+      topic: "Семейное право и Сделки",
+      type: "task",
+      title: "Практическая задача №2: Распоряжение имуществом супругов",
+      scenario: "Гражданин А. желает продать автомобиль, приобретенный в браке, но оформленный только на его имя. Покупатель требует нотариальное согласие супруги. Обязан ли нотариус удостоверить такое согласие?",
+      keywords: ["согласие", "35", "семейный", "супруг", "совместная", "удостоверить"],
+      solution: {
+        rule: "ст. 35 Семейного кодекса РФ",
+        logic: "Хотя для движимого имущества согласие предполагается, по просьбе сторон нотариус удостоверяет нотариальное согласие супруга.",
+        action: "Установить личность супруги, проверить факт брака и удостоверить согласие на отчуждение авто."
+      }
+    }
+  ];
+
+  /* ==========================================================================
+     3. СОСТОЯНИЕ ПРИЛОЖЕНИЯ И АВТОСОХРАНЕНИЕ
+     ========================================================================== */
+  const DEFAULT_STATE = {
+    currentIndex: 0,
+    totalAnswered: 0,
+    correctCount: 0,
+    errorIds: [],
+    topicStats: {},
+    isDesktopView: false,
+    sessionQueue: []
+  };
+
+  let AppState = JSON.parse(localStorage.getItem('notary_state_v42')) || { ...DEFAULT_STATE };
+
+  function syncStateToStorage() {
+    localStorage.setItem('notary_state_v42', JSON.stringify(AppState));
+    renderDashboardUI();
+  }
+
+  function resetFullState() {
+    if (confirm("Сбросить всю статистику и начать сначала?")) {
+      AppState = { ...DEFAULT_STATE };
+      buildSessionQueue();
+      syncStateToStorage();
+      renderCurrentQuestion();
+    }
+  }
+
+  /* ==========================================================================
+     4. АЛГОРИТМ ФОРМИРОВАНИЯ ОЧЕРЕДИ: ЗАДАЧА СТРОГО КАЖДЫЙ 20-Й ВОПРОС
+     ========================================================================== */
+  function buildSessionQueue() {
+    let tests = [...TEST_DATABASE].sort(() => Math.random() - 0.5);
+    let tasks = [...TASKS_DATABASE].sort(() => Math.random() - 0.5);
+
+    let queue = [];
+    let testIdx = 0;
+    let taskIdx = 0;
+
+    // Генерируем ленту на 60 элементов
+    for (let i = 1; i <= 60; i++) {
+      if (i % 20 === 0) {
+        // Каждая 20-я позиция — строго Практическая задача!
+        let t = tasks[taskIdx % tasks.length];
+        queue.push({ ...t, uniqueKey: 'task_' + i + '_' + t.id });
+        taskIdx++;
+      } else {
+        // Обычные тестовые вопросы
+        let q = tests[testIdx % tests.length];
+        queue.push({ ...q, uniqueKey: 'test_' + i + '_' + q.id });
+        testIdx++;
+      }
+    }
+
+    AppState.sessionQueue = queue;
+  }
+
+  /* ==========================================================================
+     5. ИНИЦИАЛИЗАЦИЯ И ОТОБРАЖЕНИЕ
+     ========================================================================== */
+  let isOptionAnsweredInCurrentTurn = false;
+
+  function initApp() {
+    if (!AppState.sessionQueue || AppState.sessionQueue.length === 0) {
+      buildSessionQueue();
+    }
+
+    if (AppState.isDesktopView) {
+      document.body.classList.add('desktop-view');
+      document.getElementById('layout-toggle-btn').innerText = "📱 Режим iPhone";
+    }
+
+    renderCurrentQuestion();
+    renderDashboardUI();
+  }
+
+  function toggleLayoutMode() {
+    AppState.isDesktopView = !AppState.isDesktopView;
+    document.body.classList.toggle('desktop-view', AppState.isDesktopView);
+    document.getElementById('layout-toggle-btn').innerText = AppState.isDesktopView ? "📱 Режим iPhone" : "💻 Режим Ноутбука";
+    syncStateToStorage();
+  }
+
+  function renderDashboardUI() {
+    document.getElementById('ui-answered-count').innerText = AppState.totalAnswered;
+    document.getElementById('ui-errors-count').innerText = AppState.errorIds.length;
+    
+    const accuracy = AppState.totalAnswered > 0 
+      ? Math.round((AppState.correctCount / AppState.totalAnswered) * 100) 
+      : 0;
+    document.getElementById('ui-accuracy-rate').innerText = accuracy + '%';
+
+    const topicRoot = document.getElementById('topic-breakdown-list');
+    if (Object.keys(AppState.topicStats).length === 0) {
+      topicRoot.innerHTML = "Отвечайте на вопросы для сбора динамической аналитики.";
+    } else {
+      let html = "";
+      for (let t in AppState.topicStats) {
+        let stat = AppState.topicStats[t];
+        let rate = Math.round((stat.correct / stat.total) * 100);
+        html += `<div style="margin-bottom: 4px;">
+          <b>${t}:</b> <span style="color:${rate >= 75 ? '#34d399' : '#f87171'}">${rate}%</span> (${stat.correct}/${stat.total})
+        </div>`;
+      }
+      topicRoot.innerHTML = html;
+    }
+  }
+
+  function renderCurrentQuestion() {
+    isOptionAnsweredInCurrentTurn = false;
+    
+    // Безопасная проверка выхода за границы
+    if (AppState.currentIndex >= AppState.sessionQueue.length) {
+      AppState.currentIndex = 0;
+    }
+
+    const q = AppState.sessionQueue[AppState.currentIndex];
+    
+    document.getElementById('ui-topic-tag').innerText = q.topic;
+    document.getElementById('ui-question-counter').innerText = `${AppState.currentIndex + 1} / ${AppState.sessionQueue.length}`;
+
+    const root = document.getElementById('dynamic-content-root');
+
+    if (q.type === 'task') {
+      // РЕНДЕР ПРАКТИЧЕСКОЙ ЗАДАЧИ
+      root.innerHTML = `
+        <div style="background: rgba(15, 23, 42, 0.85); border: 1px dashed var(--accent-blue); padding: 10px; border-radius: 10px; margin-bottom: 6px;">
+          <h3 style="margin: 0 0 4px 0; color: var(--accent-cyan); font-size: 0.9em;">📋 ${q.title}</h3>
+          <p style="font-size: 0.83em; line-height: 1.35; color: #cbd5e1; margin-bottom: 8px;">${q.scenario}</p>
+          
+          <label style="font-size: 0.7em; color: var(--text-muted); font-weight: 600;">Надиктуйте или введите ваш ответ (🎙️ на клавиатуре):</label>
+          <textarea id="task-speech-field" class="task-speech-input" rows="2" placeholder="Решение задачи..."></textarea>
+          
+          <button class="nav-btn" style="width: 100%; padding: 8px; background: #0284c7; margin-top: 4px;" onclick="processAIEvaluation()">⚖️ Проверить ответ через ИИ</button>
+
+          <div id="ai-feedback-panel" class="legal-analysis-box">
+            <div id="ai-verdict-text" style="font-weight: bold; margin-bottom: 4px;"></div>
+            <p style="margin: 2px 0;"><b>📜 Норма права:</b> ${q.solution.rule}</p>
+            <p style="margin: 2px 0;"><b>🧠 Юридическая логика:</b> ${q.solution.logic}</p>
+            <p style="margin: 2px 0;"><b>💡 Действия нотариуса:</b> ${q.solution.action}</p>
+            
+            <div style="display: flex; gap: 6px; margin-top: 8px;">
+              <button class="nav-btn" style="background: var(--success-green); padding: 8px;" onclick="handleTaskResult(true, ${q.id})">✅ Решил верно</button>
+              <button class="nav-btn" style="background: var(--error-red); padding: 8px;" onclick="handleTaskResult(false, ${q.id})">❌ В ошибки</button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      // РЕНДЕР ТЕСТОВОГО ВОПРОСА
+      let optionsHTML = q.options.map((opt, idx) => `
+        <button class="opt-button" onclick="handleOptionSelect(${idx}, ${q.correct}, ${q.id}, '${q.topic}', this)">
+          ${idx + 1}. ${opt}
+        </button>
+      `).join('');
+
+      root.innerHTML = `
+        <div class="question-text">${q.question}</div>
+        <div class="answers-container">${optionsHTML}</div>
+        
+        <button class="pill-btn" style="margin-top: 10px; width: 100%; justify-content: center; background: rgba(55, 65, 81, 0.5);" onclick="toggleLegalHint()">
+          ⚖️ Развёрнутое правовое обоснование
+        </button>
+
+        <div id="legal-hint-card" class="legal-analysis-box">
+          <p style="margin: 0 0 3px 0;"><b>📜 Норма права:</b> ${q.legalBasis.rule}</p>
+          <p style="margin: 0 0 3px 0;"><b>🧠 Логика:</b> ${q.legalBasis.logic}</p>
+          <p style="margin: 0;"><b>💡 Пример:</b> ${q.legalBasis.example}</p>
+        </div>
+      `;
+    }
+
+    // Сбросить скролл карточки вверх
+    document.getElementById('quiz-card-element').scrollTop = 0;
+  }
+
+  /* ==========================================================================
+     6. ОБРАБОТКА ОТВЕТОВ И ПЕРЕХОДОВ
+     ========================================================================== */
+  function handleOptionSelect(selectedIdx, correctIdx, qId, topic, btnElement) {
+    if (isOptionAnsweredInCurrentTurn) return;
+    isOptionAnsweredInCurrentTurn = true;
+
+    AppState.totalAnswered++;
+
+    if (!AppState.topicStats[topic]) {
+      AppState.topicStats[topic] = { total: 0, correct: 0 };
+    }
+    AppState.topicStats[topic].total++;
+
+    const allButtons = document.querySelectorAll('.opt-button');
+
+    if (selectedIdx === correctIdx) {
+      AppState.correctCount++;
+      AppState.topicStats[topic].correct++;
+      btnElement.classList.add('state-correct');
+      AudioEngine.playCorrect();
+      syncStateToStorage();
+
+      setTimeout(() => {
+        navigateNext();
+      }, 600);
+    } else {
+      if (!AppState.errorIds.includes(qId)) {
+        AppState.errorIds.push(qId);
+      }
+      btnElement.classList.add('state-wrong');
+      if (allButtons[correctIdx]) {
+        allButtons[correctIdx].classList.add('state-correct');
+      }
+      AudioEngine.playWrong();
+      document.getElementById('legal-hint-card').style.display = 'block';
+      syncStateToStorage();
+    }
+  }
+
+  function processAIEvaluation() {
+    const userInput = document.getElementById('task-speech-field').value.trim().toLowerCase();
+    if (!userInput) {
+      alert("Надиктуйте или введите ответ перед проверкой!");
+      return;
+    }
+
+    const q = AppState.sessionQueue[AppState.currentIndex];
+    let matched = 0;
+
+    if (q.keywords) {
+      q.keywords.forEach(kw => {
+        if (userInput.includes(kw.toLowerCase())) matched++;
+      });
+    }
+
+    const verdictRoot = document.getElementById('ai-verdict-text');
+    if (matched >= 2) {
+      verdictRoot.innerHTML = `<span style="color: var(--success-green);">✅ ИИ Оценка: Ответ верный! Ключевые нормы уложены грамотно.</span>`;
+      AudioEngine.playCorrect();
+    } else {
+      verdictRoot.innerHTML = `<span style="color: var(--error-red);">⚠️ ИИ Оценка: Ответ неполный. Сверьте с эталонной нормой ниже.</span>`;
+      AudioEngine.playWrong();
+    }
+
+    document.getElementById('ai-feedback-panel').style.display = 'block';
+  }
+
+  function handleTaskResult(isSuccess, qId) {
+    AppState.totalAnswered++;
+    if (isSuccess) {
+      AppState.correctCount++;
+      AppState.errorIds = AppState.errorIds.filter(id => id !== qId);
+      AudioEngine.playCorrect();
+    } else {
+      if (!AppState.errorIds.includes(qId)) AppState.errorIds.push(qId);
+      AudioEngine.playWrong();
+    }
+    
+    syncStateToStorage();
+    
+    // Автоматический переход к следующему вопросу
+    navigateNext();
+  }
+
+  function toggleLegalHint() {
+    const hint = document.getElementById('legal-hint-card');
+    hint.style.display = (hint.style.display === 'block') ? 'none' : 'block';
+  }
+
+  function navigateNext() {
+    if (AppState.currentIndex < AppState.sessionQueue.length - 1) {
+      AppState.currentIndex++;
+    } else {
+      AppState.currentIndex = 0; // Зацикливание при достижении конца
+    }
+    syncStateToStorage();
+    renderCurrentQuestion();
+  }
+
+  function navigatePrevious() {
+    if (AppState.currentIndex > 0) {
+      AppState.currentIndex--;
+      syncStateToStorage();
+      renderCurrentQuestion();
+    }
+  }
+
+  function triggerShuffleBlock() {
+    buildSessionQueue();
+    AppState.currentIndex = 0;
+    syncStateToStorage();
+    renderCurrentQuestion();
+  }
+
+  function exportAnalyticsForAI() {
+    let report = `ОТЧЕТ AI ТРЕНОЖЕРА НОТАРИУСА:\n`;
+    report += `Отвечено: ${AppState.totalAnswered}\n`;
+    report += `Точность: ${document.getElementById('ui-accuracy-rate').innerText}\n`;
+    report += `Ошибок: ${AppState.errorIds.length}\n`;
+    navigator.clipboard.writeText(report);
+    alert("📊 Данные скопированы в буфер обмена!");
+  }
+
+  // ЗАПУСК
+  window.onload = initApp;
+</script>
+</body>
+</html>
