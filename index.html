@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>PRO Нотариус 2026: Core Engine</title>
+  <title>PRO Нотариус 2026: Siri Engine</title>
   
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -142,7 +142,7 @@
 
 <div id="app-container">
   <header class="header-bar">
-    <div class="brand-title">⚖️ Нотариус Engine</div>
+    <div class="brand-title">⚖️ Нотариус Siri Engine</div>
     <div style="display: flex; gap: 4px;">
       <button class="pill-btn" onclick="toggleHandsFreeMode()" id="handsfree-btn">🎧 Без рук</button>
       <button class="pill-btn" onclick="openTopicsModal()">📚 Темы</button>
@@ -164,7 +164,7 @@
       <span class="counter-badge" id="ui-question-counter">0 / 0</span>
     </div>
     <div id="dynamic-content-root">
-      <div style="text-align: center; padding: 20px; color: var(--accent-cyan);">⏳ Чтение внешних файлов Word и Excel с GitHub...</div>
+      <div style="text-align: center; padding: 20px; color: var(--accent-cyan);">⏳ Загрузка вопросов и подключение Siri...</div>
     </div>
   </article>
 
@@ -185,7 +185,7 @@
 </div>
 
 <script>
-  /* ГОЛОСОВОЙ И АУДИО ДВИЖОК С ПОДДЕРЖКОЙ SIRI (ГОЛОС 2) */
+  /* ГОЛОСОВОЙ ДВИЖОК C ПРИНУДИТЕЛЬНЫМ ПОИСКОМ SIRI (ГОЛОС 2) */
   const AudioEngine = {
     ctx: null, enabled: true, speechRate: 1.0, isSpeaking: false, selectedVoice: null,
     init() {
@@ -199,18 +199,24 @@
       if (!('speechSynthesis' in window)) return;
       const voices = window.speechSynthesis.getVoices();
       
-      // Точный зават Siri (Голос 2) / Премиальных русских голосов iOS
-      this.selectedVoice = voices.find(v => 
-        v.lang.includes('ru') && (
-          v.name.includes('Siri') || 
-          v.name.includes('Voice 2') || 
-          v.name.includes('Voice2') ||
-          v.name.includes('ru-RU-a') ||
-          v.name.toLowerCase().includes('голос 2')
-        )
-      ) 
-      || voices.find(v => v.lang.includes('ru') && (v.name.includes('Milena') || v.name.includes('Tatiana') || v.name.includes('Premium')))
-      || voices.find(v => v.lang.includes('ru'));
+      // Глубокий перехват Siri Voice 2 в Safari iOS
+      let siriVoice = voices.find(v => v.lang.includes('ru') && (
+        v.name.includes('Siri') || 
+        v.name.includes('Voice 2') || 
+        v.name.includes('Voice2') ||
+        v.name.includes('ru-RU-a') ||
+        v.voiceURI.includes('siri') ||
+        v.voiceURI.includes('voice2') ||
+        v.name.toLowerCase().includes('голос 2')
+      ));
+
+      if (siriVoice) {
+        this.selectedVoice = siriVoice;
+      } else {
+        // Резервный поиск системных русских голосов
+        this.selectedVoice = voices.find(v => v.lang.includes('ru') && (v.name.includes('Milena') || v.name.includes('Tatiana') || v.name.includes('Premium')))
+                          || voices.find(v => v.lang.includes('ru'));
+      }
     },
     playCorrect() {
       if (!this.enabled) return; this.init();
@@ -240,8 +246,10 @@
       const utter = new SpeechSynthesisUtterance(formattedText);
       utter.lang = 'ru-RU';
       utter.rate = this.speechRate;
-      if (!this.selectedVoice) this.findBestFemaleVoice();
+      
+      this.findBestFemaleVoice();
       if (this.selectedVoice) utter.voice = this.selectedVoice;
+
       this.isSpeaking = true;
       utter.onend = () => {
         this.isSpeaking = false;
@@ -260,7 +268,7 @@
     document.getElementById('sound-btn').innerText = AudioEngine.enabled ? "🔊 Звук" : "🔇 Звук";
   }
 
-  /* ГЕНЕРАТОР ПРАВОВЫХ ССЫЛОК И НОРМ */
+  /* ГЕНЕРАТОР ПРАВОВЫХ ССЫЛОК */
   function generateLegalBasis(qText) {
     const text = qText.toLowerCase();
     if (text.includes("наследств") || text.includes("завещ") || text.includes("открыт")) {
@@ -294,12 +302,12 @@
   let RAW_EXCEL_TESTS = [];
   let TASKS_DATABASE = [];
   const DEFAULT_STATE = { currentIndex: 0, totalAnswered: 0, correctCount: 0, errorIds: [], sessionQueue: [], savedMainSession: null };
-  let AppState = JSON.parse(localStorage.getItem('notary_core_v2')) || { ...DEFAULT_STATE };
+  let AppState = JSON.parse(localStorage.getItem('notary_siri_v1')) || { ...DEFAULT_STATE };
   let isHandsFreeActive = false;
   let speechRecognizer = null;
 
   function syncStateToStorage() {
-    localStorage.setItem('notary_core_v2', JSON.stringify(AppState));
+    localStorage.setItem('notary_siri_v1', JSON.stringify(AppState));
     renderDashboardUI();
   }
 
@@ -312,9 +320,8 @@
     }
   }
 
-  /* ДИНАМИЧЕСКАЯ ЗАГРУЗКА ДАННЫХ ИЗ ФАЙЛОВ НА GITHUB */
+  /* ДИНАМИЧЕСКАЯ ЗАГРУЗКА ДАННЫХ ИЗ ФАЙЛОВ */
   async function loadExcelAndInit() {
-    // 1. Парсинг Word документа Задачи_исправл 29.05.2021.docx
     try {
       const respDoc = await fetch(encodeURIComponent('Задачи_исправл 29.05.2021.docx'));
       if (respDoc.ok) {
@@ -364,9 +371,8 @@
           }
         });
       }
-    } catch (e) { console.log("Файл задач Word загружается..."); }
+    } catch (e) {}
 
-    // 2. Парсинг Excel файла с тестами
     try {
       const respXls = await fetch(encodeURIComponent('Актуальные вопросы в системе с октября 2020 года.xlsx'));
       if (respXls.ok) {
@@ -396,32 +402,7 @@
           };
         }).filter(q => q.question && q.options.length > 0);
       }
-    } catch (e) { console.log("Файл тестов Excel загружается..."); }
-
-    // 3. Парсинг файла тесты C ответами 2023.docx
-    try {
-      const respDoc2 = await fetch(encodeURIComponent('тесты C ответами 2023.docx'));
-      if (respDoc2.ok) {
-        const buf = await respDoc2.arrayBuffer();
-        const result = await mammoth.extractRawText({ arrayBuffer: buf });
-        const textContent = result.value;
-        const blocks = textContent.split(/\n(?=\d+[\.\)]|\"|\b[А-ЯA-Z])/);
-
-        blocks.forEach((b, idx) => {
-          if (b.length > 30) {
-            RAW_EXCEL_TESTS.push({
-              id: 9000 + idx,
-              topic: "Тесты 2023 года",
-              type: "test",
-              question: b.trim().substring(0, 200),
-              options: ["a. Да / Верно", "b. Нет / Неверно"],
-              correct: 0,
-              legalBasis: generateLegalBasis(b)
-            });
-          }
-        });
-      }
-    } catch (e) { console.log("Файл тестов Word 2023 загружается..."); }
+    } catch (e) {}
 
     if (!AppState.sessionQueue || AppState.sessionQueue.length === 0) {
       buildSessionQueue();
