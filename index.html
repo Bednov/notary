@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тренажёр Нотариуса</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --accent-color: #3b82f6;
+      --success-color: #10b981;
+      --error-color: #ef4444;
+      --hint-bg: #334155;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      padding: 12px;
+      display: flex;
+      justify-content: center;
+    }
+    .quiz-container { max-width: 600px; width: 100%; background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .stats-card { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; margin-bottom: 15px; display: flex; justify-content: space-around; text-align: center; }
+    .stat-val { font-size: 1.2em; font-weight: bold; color: var(--accent-color); }
+    .stat-lbl { font-size: 0.75em; color: #94a3b8; }
+    .controls-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 15px; }
+    .btn-ctrl { background: #475569; color: #fff; border: none; padding: 8px 4px; border-radius: 6px; font-size: 0.75em; font-weight: 600; }
+    .btn { background: var(--accent-color); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 600; width: 100%; margin-top: 10px; font-size: 0.95em; }
+    .option-btn { background: #334155; text-align: left; line-height: 1.3; }
+    .hint-box { margin-top: 12px; padding: 12px; background-color: var(--hint-bg); border-left: 4px solid var(--accent-color); border-radius: 6px; display: none; font-size: 0.88em; }
+    .task-card { background: #1e293b; border: 2px dashed #64748b; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+<div class="quiz-container">
+  <div class="stats-card">
+    <div><div class="stat-val" id="stat-total">0</div><div class="stat-lbl">Отвечено</div></div>
+    <div><div class="stat-val" id="stat-accuracy" style="color:#10b981;">0%</div><div class="stat-lbl">Точность</div></div>
+    <div><div class="stat-val" id="stat-errors" style="color:#ef4444;">0</div><div class="stat-lbl">Ошибок</div></div>
+  </div>
+  <div class="controls-panel">
+    <button class="btn-ctrl" onclick="shuffleCurrentBlock()">🔀 Блок (30)</button>
+    <button class="btn-ctrl" onclick="shuffleErrors()">⚠️ Ошибки</button>
+    <button class="btn-ctrl" onclick="shuffleAllQuestions()">💥 Всё сразу</button>
+  </div>
+  <div style="font-size:0.8em; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between;">
+    <span id="mode-text">Все вопросы</span><span id="counter-text">1 / 0</span>
+  </div>
+  <div id="content-area"></div>
+  <div style="display:flex; gap:8px; margin-top:15px;">
+    <button class="btn" style="background:#334155;" onclick="prevQuestion()">⬅️ Назад</button>
+    <button class="btn" onclick="nextQuestion()">Вперёд ➡️</button>
+  </div>
+  <button onclick="resetStats()" style="background:none; border:none; color:#64748b; font-size:0.75em; width:100%; margin-top:15px;">🗑 Сбросить прогресс</button>
+</div>
+<script>
+  // Тестовые данные (каждые 2 вопроса для демонстрации вставлена практическая задача, в вашей базе сделаем каждые 30)
+  const allQuestionsData = [
+    { id: 1, type: "test", question: "Требования к юр. стажу для врио нотариуса?", options: ["Не менее 3 лет", "Не менее 5 лет", "Не менее 1 года"], correct: 1, legalBasis: { rule: "ст. 20 Основ о нотариате", logic: "Полномочия врио равны нотариусу.", example: "Стаж должен быть минимум 5 лет." } },
+    { id: 2, type: "test", question: "Срок действия результатов квалиф. экзамена?", options: ["1 год", "3 года", "5 лет"], correct: 1, legalBasis: { rule: "ст. 3.1 Основ о нотариате", logic: "Законодательство меняется.", example: "Действует 3 года." } },
+    { id: 3, type: "task", title: "Практическая задача №1: Наследование по завещанию", scenario: "К нотариусу обратился гражданин А. умершего отца. Имущество завещано А. Но осталась нетрудоспособная супруга (65 лет). Действия нотариуса?", solution: { rule: "ст. 1149 ГК РФ", logic: "Супруга имеет право на обязательную долю.", action: "Разъяснить право на долю и выдать свидетельство." } }
+  ];
+  let currentList = []; let currentIndex = 0;
+  let userStats = JSON.parse(localStorage.getItem('notary_stats')) || { totalAnswered: 0, correctCount: 0, errorIds: [] };
+  function saveStats() { localStorage.setItem('notary_stats', JSON.stringify(userStats)); updateStatsUI(); }
+  function updateStatsUI() { document.getElementById('stat-total').innerText = userStats.totalAnswered; document.getElementById('stat-errors').innerText = userStats.errorIds.length; let acc = userStats.totalAnswered > 0 ? Math.round((userStats.correctCount / userStats.totalAnswered) * 100) : 0; document.getElementById('stat-accuracy').innerText = acc + '%'; }
+  function shuffle(array) { let arr = [...array]; for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+  function shuffleAllQuestions() { currentList = shuffle(allQuestionsData); currentIndex = 0; renderQuestion(); }
+  function shuffleErrors() { let errs = allQuestionsData.filter(q => userStats.errorIds.includes(q.id)); if (errs.length === 0) { alert("Ошибок нет!"); return; } currentList = shuffle(errs); currentIndex = 0; renderQuestion(); }
+  function shuffleCurrentBlock() { let start = Math.floor(currentIndex / 30) * 30; let end = Math.min(start + 30, currentList.length); let block = currentList.slice(start, end); currentList.splice(start, block.length, ...shuffle(block)); currentIndex = start; renderQuestion(); }
+  function renderQuestion() {
+    if (currentList.length === 0) return;
+    const q = currentList[currentIndex];
+    document.getElementById('counter-text').innerText = ${currentIndex + 1} / ${currentList.length};
+    const area = document.getElementById('content-area');
+    if (q.type === "task") {
+      area.innerHTML = <div class="task-card"><h3>📋 ${q.title}</h3><p>${q.scenario}</p><button class="btn" onclick="document.getElementById('task-sol').style.display='block'">⚖️ Показать решение</button><div id="task-sol" style="display:none; margin-top:15px;"><b>Норма:</b> ${q.solution.rule}<br><b>Логика:</b> ${q.solution.logic}<br><b>Решение:</b> ${q.solution.action}<div style="display:flex; gap:10px; margin-top:10px;"><button class="btn" style="background:#10b981;" onclick="markTask(true, ${q.id})">Решил верно</button><button class="btn" style="background:#ef4444;" onclick="markTask(false, ${q.id})">Нужно повторить</button></div></div></div>;
+    } else {
+      area.innerHTML = <div id="question-text" style="font-size:1.05em; font-weight:600; margin-bottom:12px;">${q.question}</div><div id="options-container"></div><button class="btn" style="background:#475569;" onclick="document.getElementById('hint-box').style.display='block'">⚖️ Разбор нормы</button><div id="hint-box" class="hint-box"><b>📜 Норма:</b> ${q.legalBasis.rule}<br><b>🧠 Логика:</b> ${q.legalBasis.logic}<br><b>💡 Пример:</b> ${q.legalBasis.example}</div>;
+      const container = document.getElementById('options-container');
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button'); btn.className = 'btn option-btn'; btn.innerText = ${idx + 1}. ${opt}; btn.onclick = () => checkAnswer(idx, q.correct, q.id); container.appendChild(btn);
+      });
+    }
+    updateStatsUI();
+  }
+  function checkAnswer(selected, correct, qId) { userStats.totalAnswered++; if (selected === correct) { userStats.correctCount++; alert("Верно! ⚖️"); } else { if (!userStats.errorIds.includes(qId)) userStats.errorIds.push(qId); alert("Неверно!"); document.getElementById('hint-box').style.display = 'block'; } saveStats(); }
+  function markTask(success, qId) { userStats.totalAnswered++; if (success) { userStats.correctCount++; userStats.errorIds = userStats.errorIds.filter(id => id !== qId); } else { if (!userStats.errorIds.includes(qId)) userStats.errorIds.push(qId); } saveStats(); nextQuestion(); }
+  function nextQuestion() { if (currentIndex < currentList.length - 1) { currentIndex++; renderQuestion(); } }
+  function prevQuestion() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
+  function resetStats() { if (confirm("Сбросить прогресс?")) { userStats = { totalAnswered: 0, correctCount: 0, errorIds: [] }; saveStats(); } }
+  window.onload = () => { shuffleAllQuestions(); };
+</script>
+</body>
+</html>
