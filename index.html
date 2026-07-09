@@ -179,6 +179,7 @@
 
 </div>
 
+<!-- МОДАЛЬНОЕ ОКНО ТЕМ И БЛОКОВ -->
 <div class="modal-overlay" id="topics-modal">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; position: sticky; top: 0; background: var(--bg-color); padding: 8px 0; z-index: 10;">
     <h2 style="margin: 0; font-size: 1.1em; color: var(--accent-cyan);">📚 Каталог тем</h2>
@@ -187,10 +188,8 @@
   <div id="topics-list-container"></div>
 </div>
 
-<script src="legal_base.js"></script>
-
 <script>
-  /* АУДИО И УЛУЧШЕННЫЙ ЖЕНСКИЙ ГОЛОС */
+  /* АУДИО И ЕСТЕСТВЕННЫЙ ЖЕНСКИЙ ГОЛОС */
   const AudioEngine = {
     ctx: null, enabled: true, speechRate: 1.0, isSpeaking: false, selectedVoice: null,
     init() {
@@ -203,7 +202,6 @@
     findBestFemaleVoice() {
       if (!('speechSynthesis' in window)) return;
       const voices = window.speechSynthesis.getVoices();
-      // Поиск наилучшего женского голоса на русском
       this.selectedVoice = voices.find(v => v.lang.includes('ru') && (v.name.includes('Tatiana') || v.name.includes('Milena') || v.name.includes('Katya') || v.name.includes('Yelda') || v.name.includes('Premium') || v.name.includes('Enhanced'))) 
                         || voices.find(v => v.lang.includes('ru'));
     },
@@ -232,9 +230,7 @@
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       
-      // Расстановка пауз для естественной дикции
       let formattedText = text.replace(/([.,;:!?])/g, "$1 ");
-      
       const utter = new SpeechSynthesisUtterance(formattedText);
       utter.lang = 'ru-RU';
       utter.rate = this.speechRate;
@@ -260,7 +256,46 @@
     document.getElementById('sound-btn').innerText = AudioEngine.enabled ? "🔊 Звук" : "🔇 Звук";
   }
 
-  /* РАСШИРЕННАЯ БАЗА ПРАКТИЧЕСКИХ ЗАДАЧ */
+  /* ГЕНЕРАТОР ПРАВОВЫХ ОБОСНОВАНИЙ ДЛЯ ВСЕХ 1 157 ВОПРОСОВ */
+  function generateLegalBasis(qText, topicId) {
+    const text = qText.toLowerCase();
+    
+    if (text.includes("наследств") || text.includes("завещ") || text.includes("открыт")) {
+      return {
+        rule: "Гражданский кодекс РФ (Раздел V. Наследственное право, ст. 1110 - 1185 ГК РФ)",
+        logic: "Определяет порядок наследования по закону и завещанию, пресекательные сроки подачи заявлений нотариусу и права обязательных наследников.",
+        example: "Принятие наследства осуществляется в течение 6 месяцев со дня его открытия у нотариуса по месту открытия наследства."
+      };
+    }
+    if (text.includes("доверенност") || text.includes("представитель") || text.includes("полномоч")) {
+      return {
+        rule: "ст. 185 - 189 Гражданского кодекса РФ",
+        logic: "Устанавливает правила выдачи, действия и прекращения полномочий представителя перед третьими лицами.",
+        example: "Сведения об отмене нотариальной доверенности вносятся в ЕИС нотариата на следующий рабочий день."
+      };
+    }
+    if (text.includes("супруг") || text.includes("брачн") || text.includes("брак") || text.includes("семейн")) {
+      return {
+        rule: "Семейный кодекс РФ (ст. 34 - 44 СК РФ)",
+        logic: "Регулирует совместную собственность супругов и законный/договорный режим совместного имущества.",
+        example: "Сделки по отчуждению недвижимости требуют нотариально удостоверенного согласия второго супруга."
+      };
+    }
+    if (text.includes("плата") || text.includes("тариф") || text.includes("льгот") || text.includes("сбор")) {
+      return {
+        rule: "ст. 22, 22.1 Основ законодательства РФ о нотариате",
+        logic: "Определяет размеры нотариального тарифа и порядок предоставления предусмотренных законом льгот.",
+        example: "Нотариальный тариф за совершение действий, для которых предусмотрена обязательная нотариальная форма."
+      };
+    }
+    return {
+      rule: "Основы законодательства РФ о нотариате / ГК РФ",
+      logic: "Удостоверение нотариального действия производится в соответствии с федеральным законодательством.",
+      example: "Нотариус запрашивает необходимые документы и проверяет дееспособность участников сделки."
+    };
+  }
+
+  /* БАЗА ПРАКТИЧЕСКИХ ЗАДАЧ */
   const TASKS_DATABASE = [
     {
       id: 201, topic: "📋 Практические задачи", type: "task",
@@ -287,12 +322,12 @@
 
   let RAW_EXCEL_TESTS = [];
   const DEFAULT_STATE = { currentIndex: 0, totalAnswered: 0, correctCount: 0, errorIds: [], sessionQueue: [] };
-  let AppState = JSON.parse(localStorage.getItem('notary_full_v14')) || { ...DEFAULT_STATE };
+  let AppState = JSON.parse(localStorage.getItem('notary_full_v15')) || { ...DEFAULT_STATE };
   let isHandsFreeActive = false;
   let speechRecognizer = null;
 
   function syncStateToStorage() {
-    localStorage.setItem('notary_full_v14', JSON.stringify(AppState));
+    localStorage.setItem('notary_full_v15', JSON.stringify(AppState));
     renderDashboardUI();
   }
 
@@ -324,23 +359,17 @@
         });
 
         const correctIdx = row['Правильные ответы'] ? parseInt(row['Правильные ответы']) - 1 : 0;
-        const qId = row['Ид. №.1'] || idx + 1;
-
-        // Поиск расширенной статьи из внешнего справочника
-        const customLegal = (typeof LEGAL_BASE !== 'undefined' && LEGAL_BASE[qId]) ? LEGAL_BASE[qId] : {
-          rule: "Основы законодательства РФ о нотариате / ГК РФ",
-          logic: "Регулируется нормами действующего законодательства РФ.",
-          example: "Применяется при совершении нотариального действия."
-        };
+        const qText = String(row['Вопрос'] || '').trim();
+        const topicVal = row['Тема'] || 1;
 
         return {
-          id: qId,
-          topic: `Раздел ${row['Тема'] || 1}`,
+          id: row['Ид. №.1'] || idx + 1,
+          topic: `Раздел ${topicVal}`,
           type: "test",
-          question: String(row['Вопрос'] || '').trim(),
+          question: qText,
           options: options,
           correct: correctIdx >= 0 && correctIdx < options.length ? correctIdx : 0,
-          legalBasis: customLegal
+          legalBasis: generateLegalBasis(qText, topicVal)
         };
       }).filter(q => q.question && q.options.length > 0);
 
@@ -478,7 +507,7 @@
       AudioEngine.playCorrect();
       if (isHandsFreeActive) {
         AudioEngine.speakText("Верно!", () => {
-          setTimeout(navigateNext, 2500); // Автоперелистывание в режиме "Без рук" через 2.5 сек
+          setTimeout(navigateNext, 2500);
         });
       }
     } else {
@@ -490,7 +519,7 @@
       if (isHandsFreeActive) {
         const correctText = AppState.sessionQueue[AppState.currentIndex].options[correctIdx];
         AudioEngine.speakText(`Ошибка. Правильный ответ: ${correctText}`, () => {
-          setTimeout(navigateNext, 3500); // Даем время послушать ошибку перед переходом
+          setTimeout(navigateNext, 3500);
         });
       }
     }
@@ -555,7 +584,7 @@
     renderCurrentQuestion();
   }
 
-  /* ИИ-РЕЖИМ «БЕЗ РУК» С НАВИГАЦИЕЙ */
+  /* ИИ-РЕЖИМ «БЕЗ РУК» */
   function toggleHandsFreeMode() {
     isHandsFreeActive = !isHandsFreeActive;
     const btn = document.getElementById('handsfree-btn');
@@ -647,7 +676,6 @@
       return;
     }
 
-    // Голосовые команды перехода
     if (cmd.includes("дальше") || cmd.includes("вперед") || cmd.includes("вперёд") || cmd.includes("следующий")) {
       navigateNext();
       return;
