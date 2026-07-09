@@ -115,7 +115,7 @@
     }
     .counter-badge { font-size: 0.75em; color: var(--text-muted); font-weight: 700; }
 
-    .question-text { font-size: 0.95em; font-weight: 700; line-height: 1.35; color: #ffffff; margin-bottom: 10px; }
+    .question-text { font-size: 0.95em; font-weight: 700; line-height: 1.35; color: #ffffff; margin-bottom: 10px; white-space: pre-line; }
     .answers-container { display: flex; flex-direction: column; gap: 6px; }
 
     .opt-button {
@@ -360,8 +360,9 @@
 
   /* РЕЖИМ КВАЛИФИКАЦИОННОГО ЭКЗАМЕНА (50 ВОПРОСОВ + 1 ЗАДАЧА) */
   function startOfficialExamMode() {
-    if (RAW_EXCEL_TESTS.length === 0) {
-      alert("База вопросов еще загружается!");
+    const fullPool = [...RAW_EXCEL_TESTS];
+    if (fullPool.length === 0) {
+      alert("База вопросов еще не загружена или не найдена!");
       return;
     }
 
@@ -369,10 +370,7 @@
       AppState.savedMainSession = { queue: AppState.sessionQueue, index: AppState.currentIndex };
     }
 
-    // Случайные 50 вопросов
-    let shuffledTests = [...RAW_EXCEL_TESTS].sort(() => Math.random() - 0.5).slice(0, 50);
-    
-    // Случайная 1 задача
+    let shuffledTests = fullPool.sort(() => Math.random() - 0.5).slice(0, 50);
     let shuffledTasks = [...TASKS_DATABASE].sort(() => Math.random() - 0.5);
     let chosenTask = shuffledTasks.length > 0 ? shuffledTasks[0] : null;
 
@@ -423,7 +421,11 @@
     renderCurrentQuestion();
   }
 
+  /* УМНЫЙ ПАРСЕР ДОКУМЕНТОВ WORD И EXCEL */
   async function loadExcelAndInit() {
+    let loadErrors = [];
+
+    // 1. Парсинг Word документа с задачами
     try {
       const respDoc = await fetch(encodeURIComponent('Задачи_исправл 29.05.2021.docx'));
       if (respDoc.ok) {
@@ -431,31 +433,53 @@
         const result = await mammoth.extractRawText({ arrayBuffer: buf });
         const textContent = result.value;
 
-        const blocks = textContent.split(/(?=<Задача\s*№?>:?)/i);
-        blocks.forEach((block, idx) => {
-          if (block.includes('<Задача>') || block.includes('Задача:')) {
-            let qMatch = block.match(/<Задача>:?\s*([\s\S]*?)(?=<Варианты|$)/i);
-            let ansMatch = block.match(/<Варианты ответа>:?\s*([\s\S]*?)(?=<Правильный|$)/i);
-            let correctMatch = block.match(/<Правильный ответ>:?\s*([\s\S]*?)(?=<Обоснование|$)/i);
-            let ruleMatch = block.match(/<Обоснование[^>]*>:?\s*([\s\S]*?)(?=$)/i);
-
+        // Разделение по тегам задач
+        const rawBlocks = textContent.split(/(?=<Задача(?:\s*№)?>:?)/i);
+        
+        rawBlocks.forEach((block, idx) => {
+          if (block.includes('<Задача>') || block.includes('<Задача №>:')) {
+            // Извлекаем текст задачи
+            let qText = "";
+            let qMatch = block.match(/<Задача>:?\s*([\s\S]*?)(?=<Варианты|<Правильный|<Обоснование|\n\s*1\.| $)/i);
             if (qMatch) {
-              let qText = qMatch[1].trim();
-              let options = [];
-              if (ansMatch) {
-                let matches = ansMatch[1].match(/<\d+>:?\s*([^\n<]+)/g);
-                if (matches) options = matches.map(m => m.replace(/<\d+>:?\s*/, '').trim());
+              qText = qMatch[1].trim();
+            }
+
+            // Извлекаем варианты ответов
+            let options = [];
+            let ansMatch = block.match(/<Варианты ответа>:?\s*([\s\S]*?)(?=<Правильный|<Обоснование|$)/i);
+            if (ansMatch) {
+              let matches = ansMatch[1].match(/<\d+>:?\s*([^\n<]+)/g);
+              if (matches) options = matches.map(m => m.replace(/<\d+>:?\s*/, '').trim());
+            }
+
+            if (options.length === 0) {
+              // Ищем нумерованные варианты 1. ... 2. ...
+              let inlineOpts = block.match(/(?:^|\n)\s*([12345]\.?\s*[^\n]+)/g);
+              if (inlineOpts && inlineOpts.length >= 2) {
+                options = inlineOpts.map(o => o.trim());
               }
-              if (options.length === 0) options = ["1. Да", "2. Нет"];
+            }
 
-              let correctVal = 0;
-              if (correctMatch) {
-                let cText = correctMatch[1].trim().toLowerCase();
-                if (cText.includes("2") || cText.includes("нет")) correctVal = 1;
-              }
+            if (options.length === 0) {
+              options = ["1. Да", "2. Нет"];
+            }
 
-              let ruleText = ruleMatch ? ruleMatch[1].trim() : "Основы нотариата / ГК РФ";
+            // Правильный ответ
+            let correctVal = 0;
+            let correctMatch = block.match(/<Правильный ответ>:?\s*([^\n<]+)/i);
+            if (correctMatch) {
+              let cText = correctMatch[1].trim().toLowerCase();
+              if (cText.includes("2") || cText.includes("нет")) correctVal = 1;
+              else if (cText.includes("3")) correctVal = 2;
+            }
 
+            // Обоснование
+            let ruleText = "Основы нотариата / ГК РФ";
+            let ruleMatch = block.match(/<Обоснование[^>]*>:?\s*([\s\S]*?)(?=$)/i);
+            if (ruleMatch) ruleText = ruleMatch[1].trim();
+
+            if (qText.length > 10) {
               TASKS_DATABASE.push({
                 id: 5000 + idx,
                 topic: "📋 Задачи квалификационного экзамена",
@@ -472,9 +496,14 @@
             }
           }
         });
+      } else {
+        loadErrors.push("Файл 'Задачи_исправл 29.05.2021.docx' не найден в корне проекта");
       }
-    } catch (e) {}
+    } catch (e) {
+      console.log("Загрузка задач...", e);
+    }
 
+    // 2. Парсинг Excel тестов (1157 вопросов)
     try {
       const respXls = await fetch(encodeURIComponent('Актуальные вопросы в системе с октября 2020 года.xlsx'));
       if (respXls.ok) {
@@ -503,6 +532,49 @@
             legalBasis: generateLegalBasis(qText)
           };
         }).filter(q => q.question && q.options.length > 0);
+      }
+    } catch (e) {
+      console.log("Загрузка Excel тестов...", e);
+    }
+
+    // 3. Парсинг Word тестов 2023 года
+    try {
+      const respDoc2 = await fetch(encodeURIComponent('тесты C ответами 2023.docx'));
+      if (respDoc2.ok) {
+        const buf = await respDoc2.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer: buf });
+        const textContent = result.value;
+
+        const lines = textContent.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        let currentQuestion = "";
+        let currentOptions = [];
+        let currentCorrect = 0;
+        let currentRule = "";
+
+        lines.forEach((line, idx) => {
+          if (line.includes("Выберите один или несколько ответов") || line.length > 45 && !line.startsWith("a.") && !line.startsWith("b.") && !line.startsWith("□")) {
+            if (currentQuestion && currentOptions.length > 0) {
+              RAW_EXCEL_TESTS.push({
+                id: 9000 + idx,
+                topic: "Тесты 2023 года",
+                type: "test",
+                question: currentQuestion,
+                options: currentOptions,
+                correct: currentCorrect,
+                legalBasis: { rule: currentRule || "Законодательство РФ о нотариате", logic: "Норма права квалификационного теста 2023 г.", example: "Совершение нотариального действия." }
+              });
+            }
+            currentQuestion = line.replace("Выберите один или несколько ответов:", "").trim();
+            currentOptions = [];
+            currentCorrect = 0;
+            currentRule = "";
+          } else if (line.startsWith("a.") || line.startsWith("b.") || line.startsWith("c.") || line.startsWith("d.") || line.startsWith("□")) {
+            let cleanOpt = line.replace(/^[a-d]\.\s*|□\s*/i, '').trim();
+            if (cleanOpt) currentOptions.push(cleanOpt);
+          } else if (line.includes("ГК") || line.includes("СК") || line.includes("ст")) {
+            currentRule = line;
+          }
+        });
       }
     } catch (e) {}
 
@@ -705,3 +777,147 @@
     } else {
       btn.classList.remove('active-handsfree');
       btn.innerText = "🎧 Без рук";
+      window.speechSynthesis.cancel();
+      if (speechRecognizer) speechRecognizer.stop();
+    }
+  }
+
+  function speakCurrentQuestionAndListen() {
+    if (!isHandsFreeActive) return;
+    const q = AppState.sessionQueue[AppState.currentIndex];
+
+    let speechText = `Вопрос: ${q.question}. Варианты: `;
+    q.options.forEach((opt) => { speechText += `${opt}. `; });
+
+    AudioEngine.speakText(speechText, () => {
+      startListeningCommands();
+    });
+  }
+
+  function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Распознавание речи не поддерживается браузером!");
+      isHandsFreeActive = false;
+      return;
+    }
+    speechRecognizer = new SpeechRecognition();
+    speechRecognizer.lang = 'ru-RU';
+    speechRecognizer.interimResults = false;
+
+    speechRecognizer.onresult = (event) => {
+      const command = event.results[0][0].transcript.toLowerCase().trim();
+      handleVoiceCommand(command);
+    };
+
+    speechRecognizer.onerror = () => {
+      if (isHandsFreeActive && !AudioEngine.isSpeaking) {
+        setTimeout(startListeningCommands, 1000);
+      }
+    };
+  }
+
+  function startListeningCommands() {
+    if (!isHandsFreeActive || AudioEngine.isSpeaking) return;
+    try { speechRecognizer.start(); } catch (e) {}
+  }
+
+  function handleVoiceCommand(cmd) {
+    const q = AppState.sessionQueue[AppState.currentIndex];
+
+    if (cmd.includes("помедленнее") || cmd.includes("медленнее")) {
+      AudioEngine.speechRate = Math.max(0.6, AudioEngine.speechRate - 0.2);
+      AudioEngine.speakText("Повторяю помедленнее.", () => speakCurrentQuestionAndListen());
+      return;
+    }
+    if (cmd.includes("быстрее")) {
+      AudioEngine.speechRate = Math.min(1.5, AudioEngine.speechRate + 0.2);
+      AudioEngine.speakText("Увеличиваю скорость.", () => speakCurrentQuestionAndListen());
+      return;
+    }
+
+    if (cmd.includes("повтори") || cmd.includes("еще раз") || cmd.includes("ещё раз")) {
+      speakCurrentQuestionAndListen();
+      return;
+    }
+
+    if (cmd.includes("подсказка") || cmd.includes("закон") || cmd.includes("норма")) {
+      AudioEngine.speakText(`Правовое обоснование: ${q.legalBasis.rule}`, () => startListeningCommands());
+      return;
+    }
+
+    if (cmd.includes("дальше") || cmd.includes("вперед") || cmd.includes("вперёд") || cmd.includes("следующий")) {
+      navigateNext();
+      return;
+    }
+    if (cmd.includes("назад")) {
+      navigatePrevious();
+      return;
+    }
+
+    let selectedOpt = -1;
+    if (cmd.includes("первый") || cmd.includes("один")) selectedOpt = 0;
+    else if (cmd.includes("второй") || cmd.includes("два")) selectedOpt = 1;
+    else if (cmd.includes("третий") || cmd.includes("три")) selectedOpt = 2;
+
+    if (selectedOpt !== -1 && selectedOpt < q.options.length) {
+      const buttons = document.querySelectorAll('.opt-button');
+      handleOptionSelect(selectedOpt, q.correct, q.id, buttons[selectedOpt]);
+      return;
+    }
+
+    if (isHandsFreeActive) {
+      setTimeout(startListeningCommands, 500);
+    }
+  }
+
+  function openTopicsModal() {
+    const topicsMap = {};
+    RAW_EXCEL_TESTS.forEach(q => {
+      if (!topicsMap[q.topic]) topicsMap[q.topic] = 0;
+      topicsMap[q.topic]++;
+    });
+
+    const container = document.getElementById('topics-list-container');
+    let html = `
+      <div class="topic-card" style="border-color: var(--accent-cyan);">
+        <div style="font-weight: 700; font-size: 0.9em; color: var(--accent-cyan);">📋 Задачи квалификационного экзамена (${TASKS_DATABASE.length})</div>
+        <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 2px;">Задачи с вариантами и обоснованием</div>
+        <div class="block-grid">
+          <div class="block-btn" onclick="selectTopicBlock('📋 Задачи квалификационного экзамена')" style="width: 100%;">Открыть все задачи</div>
+        </div>
+      </div>
+    `;
+
+    for (let topic in topicsMap) {
+      let count = topicsMap[topic];
+      let blocksCount = Math.ceil(count / 20) || 1;
+      let blocksHTML = "";
+      for (let b = 1; b <= blocksCount; b++) {
+        blocksHTML += `<div class="block-btn" onclick="selectTopicBlock('${topic}')">Блок ${b}</div>`;
+      }
+      html += `
+        <div class="topic-card">
+          <div style="font-weight: 700; font-size: 0.9em; color: var(--accent-cyan);">${topic}</div>
+          <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 2px;">Вопросов в теме: ${count}</div>
+          <div class="block-grid">${blocksHTML}</div>
+        </div>
+      `;
+    }
+    container.innerHTML = html;
+    document.getElementById('topics-modal').style.display = 'flex';
+  }
+
+  function closeTopicsModal() { document.getElementById('topics-modal').style.display = 'none'; }
+
+  function selectTopicBlock(topic) {
+    buildSessionQueue(topic);
+    syncStateToStorage();
+    renderCurrentQuestion();
+    closeTopicsModal();
+  }
+
+  window.onload = loadExcelAndInit;
+</script>
+</body>
+</html>
