@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>PRO Нотариус 2026</title>
+  <title>Нотариус Pro</title>
   
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -148,11 +148,11 @@
 
   <article class="quiz-card" id="quiz-card-element">
     <div class="meta-bar">
-      <span class="topic-badge" id="ui-topic-tag">📌 Состояние</span>
+      <span class="topic-badge" id="ui-topic-tag">📌 Синхронизация</span>
       <span class="counter-badge" id="ui-question-counter">0 / 0</span>
     </div>
     <div id="dynamic-content-root">
-      <div style="text-align: center; padding: 25px; color: var(--accent-cyan);">⏳ Синхронизация файлов на Айфоне...</div>
+      <div style="text-align: center; padding: 25px; color: var(--accent-cyan);">⏳ Чтение файлов Word и Excel...</div>
     </div>
   </article>
 
@@ -193,7 +193,7 @@
   let TASKS_DATABASE = [];
   const DEFAULT_STATE = { currentIndex: 0, totalAnswered: 0, correctCount: 0, errorIds: [], sessionQueue: [], savedMainSession: null };
   
-  let AppState = JSON.parse(localStorage.getItem('notary_pwa_v4')) || { ...DEFAULT_STATE };
+  let AppState = JSON.parse(localStorage.getItem('notary_pwa_v5')) || { ...DEFAULT_STATE };
   let GlobalMasteredIds = JSON.parse(localStorage.getItem('notary_global_mastered_v3')) || [];
   let RecentRandomShownIds = [];
 
@@ -203,7 +203,7 @@
   let examScore = { testPoints: 0, taskPoint: 0, argPoints: 0 };
 
   function syncStateToStorage() {
-    localStorage.setItem('notary_pwa_v4', JSON.stringify(AppState));
+    localStorage.setItem('notary_pwa_v5', JSON.stringify(AppState));
     localStorage.setItem('notary_global_mastered_v3', JSON.stringify(GlobalMasteredIds));
     renderDashboardUI();
   }
@@ -287,11 +287,11 @@
     document.getElementById('arg-status').innerText = `Начислено: ${points} б.`;
   }
 
-  /* ЧТЕНИЕ ПЕРЕИМЕНОВАННЫХ ФАЙЛОВ НАПРЯМУЮ БЕЗ ОШИБОК SAFARI */
+  /* ИДЕАЛЬНОЕ ЧТЕНИЕ ОРИГИНАЛЬНЫХ РУССКИХ ИМЕН ЧЕРЕЗ ENCODE */
   async function loadExcelAndInit() {
-    // 1. Чтение Чистого Word-файла задачtasks.docx
+    // 1. Чтение Задачи_исправл 29.05.2021.docx
     try {
-      const respDoc = await fetch('tasks.docx');
+      const respDoc = await fetch(encodeURIComponent('Задачи_исправл 29.05.2021.docx'));
       if (respDoc.ok) {
         const buf = await respDoc.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer: buf });
@@ -343,9 +343,9 @@
       }
     } catch(e) { console.log(e); }
 
-    // 2. Чтение Чистого Excel-файла тестов database.xlsx
+    // 2. Чтение Актуальные вопросы в системе с октября 2020 года.xlsx
     try {
-      const respXls = await fetch('database.xlsx');
+      const respXls = await fetch(encodeURIComponent('Актуальные вопросы в системе с октября 2020 года.xlsx'));
       if (respXls.ok) {
         const buf = await respXls.arrayBuffer();
         const wb = XLSX.read(buf, { type: 'array' });
@@ -372,9 +372,9 @@
       }
     } catch(e) { console.log(e); }
 
-    // 3. Чтение Чистого Word-файла тестов 2023 г. tests2023.docx
+    // 3. Чтение тесты C ответами 2023.docx
     try {
-      const respDoc2 = await fetch('tests2023.docx');
+      const respDoc2 = await fetch(encodeURIComponent('тесты C ответами 2023.docx'));
       if (respDoc2.ok) {
         const buf = await respDoc2.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer: buf });
