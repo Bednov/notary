@@ -260,7 +260,7 @@
       return { rule: "Гл. 10 Гражданского кодекса РФ", logic: "Устанавливает требования к нотариальной форме доверенностей и правила их отмены в ЕИС." };
     }
     if (text.includes("супруг") || text.includes("брачн") || text.includes("брак")) {
-      return { rule: "Семейный кодекс РФ (гл. 7-8 СК РФ)", logic: "Определяет законный и договорный regime имущества супругов, правила раздела совместной собственности." };
+      return { rule: "Семейный кодекс РФ (гл. 7-8 СК РФ)", logic: "Определяет законный и договорный режим имущества супругов, правила раздела совместной собственности." };
     }
     return { rule: "Основы законодательства РФ о нотариате", logic: "Регламентирует правила совершения нотариальных действий и проверку законности сделок." };
   }
@@ -269,7 +269,7 @@
   let TASKS_DATABASE = [];
   const DEFAULT_STATE = { currentIndex: 0, totalAnswered: 0, correctCount: 0, errorIds: [], sessionQueue: [], savedMainSession: null };
   
-  let AppState = JSON.parse(localStorage.getItem('notary_pwa_v7')) || { ...DEFAULT_STATE };
+  let AppState = JSON.parse(localStorage.getItem('notary_pwa_v8')) || { ...DEFAULT_STATE };
   let GlobalMasteredIds = JSON.parse(localStorage.getItem('notary_global_mastered_v3')) || [];
   let RecentRandomShownIds = [];
 
@@ -283,7 +283,7 @@
   let examScore = { testPoints: 0, taskPoint: 0, argPoints: 0 };
 
   function syncStateToStorage() {
-    localStorage.setItem('notary_pwa_v7', JSON.stringify(AppState));
+    localStorage.setItem('notary_pwa_v8', JSON.stringify(AppState));
     localStorage.setItem('notary_global_mastered_v3', JSON.stringify(GlobalMasteredIds));
     renderDashboardUI();
   }
@@ -368,17 +368,19 @@
     document.getElementById('arg-status').innerText = `Начислено: ${points} б.`;
   }
 
-  /* ЖЕЛЕЗОБЕТОННЫЙ ЛИНЕЙНЫЙ ПАРСЕР ОРИГИНАЛЬНЫХ РУССКИХ ФАЙЛОВ */
+  /* ЖЕЛЕЗОБЕТОННЫЙ ЛИНЕЙНЫЙ ПАРСЕР ОРИГИНАЛЬНЫХ РУССКИХ ФАЙЛОВ ПО АБСОЛЮТНЫМ ССЫЛКАМ */
   async function loadExcelAndInit() {
-    // Проверка загрузки библиотек для Safari
     if (typeof XLSX === 'undefined' || typeof mammoth === 'undefined') {
       setTimeout(loadExcelAndInit, 400);
       return;
     }
 
+    // Абсолютный путь CDN репозитория (подтягиваем файлы напрямую без блокировок Safari)
+    const baseCDN = "https://raw.githubusercontent.com/bednov/notary/main/";
+
     // 1. Чтение Задачи_исправл 29.05.2021.docx
     try {
-      const respDoc = await fetch(encodeURIComponent('Задачи_исправл 29.05.2021.docx'));
+      const respDoc = await fetch(baseCDN + encodeURIComponent('Задачи_исправл 29.05.2021.docx'));
       if (respDoc.ok) {
         const buf = await respDoc.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer: buf });
@@ -432,7 +434,7 @@
 
     // 2. Чтение Актуальные вопросы в системе с октября 2020 года.xlsx
     try {
-      const respXls = await fetch(encodeURIComponent('Актуальные вопросы в системе с октября 2020 года.xlsx'));
+      const respXls = await fetch(baseCDN + encodeURIComponent('Актуальные вопросы в системе с октября 2020 года.xlsx'));
       if (respXls.ok) {
         const buf = await respXls.arrayBuffer();
         const wb = XLSX.read(buf, { type: 'array' });
@@ -461,7 +463,7 @@
 
     // 3. Чтение тесты C ответами 2023.docx
     try {
-      const respDoc2 = await fetch(encodeURIComponent('тесты C ответами 2023.docx'));
+      const respDoc2 = await fetch(baseCDN + encodeURIComponent('тесты C ответами 2023.docx'));
       if (respDoc2.ok) {
         const buf = await respDoc2.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer: buf });
@@ -591,10 +593,6 @@
     
     document.getElementById('quiz-card-element').scrollTop = 0;
     renderDashboardUI();
-
-    if (isHandsFreeActive) {
-      speakCurrentQuestionAndListen();
-    }
   }
 
   function handleOptionSelect(selectedIdx, correctIdx, qId, btnElement) {
@@ -707,5 +705,3 @@
 
   window.onload = loadExcelAndInit;
 </script>
-</body>
-</html>
