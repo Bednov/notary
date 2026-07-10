@@ -29,7 +29,7 @@
     html, body {
       width: 100%; height: 100dvh; margin: 0; padding: 0;
       background-color: var(--bg-color); color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
       overflow: hidden;
     }
 
@@ -51,33 +51,24 @@
       font-size: 0.85em; font-weight: 800; color: var(--accent-cyan);
       cursor: pointer; padding: 6px 10px; border-radius: 8px;
       background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3);
-      transition: all 0.2s ease;
     }
-    .brand-title:active { transform: scale(0.95); background: rgba(56, 189, 248, 0.25); }
 
     .pill-btn {
       background: #1e293b; border: 1px solid var(--border-color); color: var(--text-main);
       padding: 6px 10px; border-radius: 16px; font-size: 0.72em; font-weight: 600; cursor: pointer;
     }
-    .pill-btn:active { background: var(--border-color); }
     .pill-btn.exam-btn { background: var(--accent-blue); color: #fff; border-color: var(--accent-cyan); font-weight: 700; }
-    .pill-btn.active-handsfree { background: var(--warning-amber); color: #000; animation: pulse 1.5s infinite; }
 
     #exam-timer-display {
       background: var(--error-red); color: white; padding: 5px 10px; border-radius: 8px;
-      font-weight: 800; font-size: 0.85em; display: none; text-align: center; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+      font-weight: 800; font-size: 0.85em; display: none; text-align: center;
     }
-
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
     .global-progress-wrapper {
       background: var(--card-bg); border: 1px solid var(--border-color);
       border-radius: 10px; padding: 6px 10px; margin-bottom: 6px; flex-shrink: 0;
     }
-    .progress-info-row {
-      display: flex; justify-content: space-between; font-size: 0.7em;
-      font-weight: 700; color: var(--text-muted); margin-bottom: 4px;
-    }
+    .progress-info-row { display: flex; justify-content: space-between; font-size: 0.7em; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
     .progress-bar-bg { width: 100%; height: 8px; background: #0f172a; border-radius: 4px; overflow: hidden; border: 1px solid var(--border-color); }
     .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); border-radius: 4px; transition: width 0.4s ease; }
 
@@ -135,7 +126,6 @@
     <div id="exam-timer-display">60:00</div>
     <div style="display: flex; gap: 4px;">
       <button class="pill-btn exam-btn" onclick="startOfficialExamMode()">⏱️ Билет (50+1)</button>
-      <button class="pill-btn" onclick="toggleHandsFreeMode()" id="handsfree-btn">🎧 Без рук</button>
       <button class="pill-btn" onclick="openTopicsModal()">📚 Темы</button>
       <button class="pill-btn" onclick="resetFullState()" style="color: var(--error-red);">🗑️ Сброс</button>
     </div>
@@ -144,7 +134,7 @@
   <section class="global-progress-wrapper">
     <div class="progress-info-row">
       <span>🚀 Общий прогресс базы:</span>
-      <span id="ui-global-progress-text" style="color: var(--accent-cyan);">0 / 0 (0%)</span>
+      <span id="ui-global-progress-text" style="color: var(--accent-cyan);">0 / 0</span>
     </div>
     <div class="progress-bar-bg"><div id="ui-global-progress-bar" class="progress-bar-fill"></div></div>
   </section>
@@ -158,11 +148,11 @@
 
   <article class="quiz-card" id="quiz-card-element">
     <div class="meta-bar">
-      <span class="topic-badge" id="ui-topic-tag">📌 База данных</span>
+      <span class="topic-badge" id="ui-topic-tag">📌 Синхронизация</span>
       <span class="counter-badge" id="ui-question-counter">0 / 0</span>
     </div>
     <div id="dynamic-content-root">
-      <div style="text-align: center; padding: 25px; color: var(--accent-cyan);">⏳ Синхронизация файлов Word и Excel с GitHub...</div>
+      <div style="text-align: center; padding: 25px; color: var(--accent-cyan);">⏳ Считываем файлы билетов и тестов...</div>
     </div>
   </article>
 
@@ -177,7 +167,7 @@
 <div class="modal-overlay" id="topics-modal">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; position: sticky; top: 0; background: var(--bg-color); padding: 8px 0; z-index: 10;">
     <h2 style="margin: 0; font-size: 1.1em; color: var(--accent-cyan);">📚 Каталог разделов</h2>
-    <button class="pill-btn" onclick="closeTopicsModal()" style="background: var(--accent-blue); padding: 8px 14px;">Вернуться к тесту</button>
+    <button class="pill-btn" onclick="closeTopicsModal()" style="background: var(--accent-blue); padding: 8px 14px;">К тесту</button>
   </div>
   <div id="topics-list-container"></div>
 </div>
@@ -185,72 +175,6 @@
 <script>
   let isTransitioning = false; 
 
-  /* ГОЛОСОВОЙ ДВИЖОК С СИСТЕМОЙ ПОДДЕРЖКИ SIRI И ЗАЩИТОЙ ДЛЯ IPHONE */
-  const AudioEngine = {
-    ctx: null, enabled: true, speechRate: 1.0, isSpeaking: false, selectedVoice: null,
-    init() {
-      if (!this.ctx) {
-        try {
-          const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          this.ctx = new AudioCtx();
-        } catch(e) { console.log("iOS AudioContext init failed", e); }
-      }
-    },
-    playCorrect() {
-      if (!this.enabled) return; this.init();
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-      osc.connect(gain); gain.connect(this.ctx.destination);
-      osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(659.25, this.ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
-      osc.start(); osc.stop(this.ctx.currentTime + 0.1);
-    },
-    playWrong() {
-      if (!this.enabled) return; this.init();
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-      osc.connect(gain); gain.connect(this.ctx.destination);
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(140, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(90, this.ctx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
-      osc.start(); osc.stop(this.ctx.currentTime + 0.15);
-    },
-    speakText(text, callback = null) {
-      if (!('speechSynthesis' in window)) { if(callback) callback(); return; }
-      window.speechSynthesis.cancel();
-      
-      let formattedText = text.replace(/([.,;:!?])/g, "$1 ");
-      const utter = new SpeechSynthesisUtterance(formattedText);
-      utter.lang = 'ru-RU';
-      utter.rate = this.speechRate;
-      
-      if (!this.selectedVoice) {
-        const voices = window.speechSynthesis.getVoices();
-        this.selectedVoice = voices.find(v => v.lang.includes('ru') && (v.name.includes('Siri') || v.name.includes('Voice 2') || v.name.includes('ru-RU-a')))
-                          || voices.find(v => v.lang.includes('ru') && (v.name.includes('Milena') || v.name.includes('Tatiana')))
-                          || voices.find(v => v.lang.includes('ru'));
-      }
-      if (this.selectedVoice) utter.voice = this.selectedVoice;
-
-      this.isSpeaking = true;
-      utter.onend = () => { this.isSpeaking = false; if (callback) callback(); };
-      utter.onerror = () => { this.isSpeaking = false; if (callback) callback(); };
-      window.speechSynthesis.speak(utter);
-    }
-  };
-
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.onvoiceschanged = () => {
-      const voices = window.speechSynthesis.getVoices();
-      AudioEngine.selectedVoice = voices.find(v => v.lang.includes('ru') && (v.name.includes('Siri') || v.name.includes('Voice 2') || v.name.includes('ru-RU-a')));
-    };
-  }
-
-  /* ГЕНЕРАТОР ПРАВОВЫХ ССЫЛОК */
   function generateLegalBasis(qText) {
     const text = qText.toLowerCase();
     if (text.includes("наследств") || text.includes("завещ") || text.includes("открыт")) {
@@ -269,21 +193,20 @@
   let TASKS_DATABASE = [];
   const DEFAULT_STATE = { currentIndex: 0, totalAnswered: 0, correctCount: 0, errorIds: [], sessionQueue: [], savedMainSession: null };
   
-  let AppState = JSON.parse(localStorage.getItem('notary_pwa_v8')) || { ...DEFAULT_STATE };
+  let AppState = { ...DEFAULT_STATE };
+  let SavedProgressState = JSON.parse(localStorage.getItem('notary_stats_save_v1')) || { totalAnswered: 0, correctCount: 0, errorIds: [] };
   let GlobalMasteredIds = JSON.parse(localStorage.getItem('notary_global_mastered_v3')) || [];
-  let RecentRandomShownIds = [];
-
-  let isHandsFreeActive = false;
-  let speechRecognizer = null;
-
-  /* ЭКЗАМЕНАЦИОННЫЕ ДАННЫЕ */
+  
   let isExamMode = false;
   let examCountdown = null;
   let examTimeLeft = 3600; 
   let examScore = { testPoints: 0, taskPoint: 0, argPoints: 0 };
 
   function syncStateToStorage() {
-    localStorage.setItem('notary_pwa_v8', JSON.stringify(AppState));
+    SavedProgressState.totalAnswered = AppState.totalAnswered;
+    SavedProgressState.correctCount = AppState.correctCount;
+    SavedProgressState.errorIds = AppState.errorIds;
+    localStorage.setItem('notary_stats_save_v1', JSON.stringify(SavedProgressState));
     localStorage.setItem('notary_global_mastered_v3', JSON.stringify(GlobalMasteredIds));
     renderDashboardUI();
   }
@@ -294,13 +217,13 @@
       isExamMode = false;
       document.getElementById('exam-timer-display').style.display = "none";
       AppState = { ...DEFAULT_STATE };
+      SavedProgressState = { totalAnswered: 0, correctCount: 0, errorIds: [] };
       buildSessionQueue();
       syncStateToStorage();
       renderCurrentQuestion();
     }
   }
 
-  /* РЕЖИМ БИЛЕТА (50+1) */
   function startOfficialExamMode() {
     if (RAW_EXCEL_TESTS.length === 0) { alert("База данных тестов еще подгружается!"); return; }
     
@@ -333,9 +256,7 @@
 
     AppState.sessionQueue = examQueue;
     AppState.currentIndex = 0;
-    syncStateToStorage();
     renderCurrentQuestion();
-    alert("🚀 Режим официального экзамена активирован! 50 тестов + 1 задача запущены. Время пошло!");
   }
 
   function finishOfficialExam() {
@@ -368,19 +289,21 @@
     document.getElementById('arg-status').innerText = `Начислено: ${points} б.`;
   }
 
-  /* ЖЕЛЕЗОБЕТОННЫЙ ЛИНЕЙНЫЙ ПАРСЕР ОРИГИНАЛЬНЫХ РУССКИХ ФАЙЛОВ ПО АБСОЛЮТНЫМ ССЫЛКАМ */
+  /* ЖЕЛЕЗОБЕТОННЫЙ ЛИНЕЙНЫЙ ПАРСЕР ПОД ИЗМЕНЕННЫЕ ЛАТИНСКИЕ ИМЕНА */
   async function loadExcelAndInit() {
     if (typeof XLSX === 'undefined' || typeof mammoth === 'undefined') {
       setTimeout(loadExcelAndInit, 400);
       return;
     }
 
-    // Абсолютный путь CDN репозитория (подтягиваем файлы напрямую без блокировок Safari)
-    const baseCDN = "https://raw.githubusercontent.com/bednov/notary/main/";
+    // Восстанавливаем прошлые сохраненные очки
+    AppState.totalAnswered = SavedProgressState.totalAnswered;
+    AppState.correctCount = SavedProgressState.correctCount;
+    AppState.errorIds = SavedProgressState.errorIds;
 
-    // 1. Чтение Задачи_исправл 29.05.2021.docx
+    // 1. Чтение переименованного файла задач tasks.docx
     try {
-      const respDoc = await fetch(baseCDN + encodeURIComponent('Задачи_исправл 29.05.2021.docx'));
+      const respDoc = await fetch('tasks.docx');
       if (respDoc.ok) {
         const buf = await respDoc.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer: buf });
@@ -430,11 +353,11 @@
           }
         });
       }
-    } catch(e) { console.log("Word task split failed", e); }
+    } catch(e) { console.log(e); }
 
-    // 2. Чтение Актуальные вопросы в системе с октября 2020 года.xlsx
+    // 2. Чтение переименованного файла тестов database.xlsx
     try {
-      const respXls = await fetch(baseCDN + encodeURIComponent('Актуальные вопросы в системе с октября 2020 года.xlsx'));
+      const respXls = await fetch('database.xlsx');
       if (respXls.ok) {
         const buf = await respXls.arrayBuffer();
         const wb = XLSX.read(buf, { type: 'array' });
@@ -459,11 +382,11 @@
           };
         }).filter(q => q.question && q.options.length > 0);
       }
-    } catch(e) { console.log("Excel array read failed", e); }
+    } catch(e) { console.log(e); }
 
-    // 3. Чтение тесты C ответами 2023.docx
+    // 3. Чтение переименованного файла тестов tests2023.docx
     try {
-      const respDoc2 = await fetch(baseCDN + encodeURIComponent('тесты C ответами 2023.docx'));
+      const respDoc2 = await fetch('tests2023.docx');
       if (respDoc2.ok) {
         const buf = await respDoc2.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer: buf });
@@ -499,10 +422,6 @@
   }
 
   function buildSessionQueue(filterTopic = null) {
-    if (!filterTopic && !AppState.savedMainSession) {
-      AppState.savedMainSession = { queue: AppState.sessionQueue, index: AppState.currentIndex };
-    }
-
     let tests = filterTopic ? RAW_EXCEL_TESTS.filter(q => q.topic === filterTopic) : [...RAW_EXCEL_TESTS];
     let tasks = [...TASKS_DATABASE];
 
@@ -513,30 +432,24 @@
       return;
     }
 
-    if (tests.length === 0) {
-      tests = [{ id: 0, topic: "Инфо", question: "Синхронизация завершена успешно! Нажмите внизу кнопку «Все темы», чтобы загрузить полный пул вопросов.", options: ["Приступить к работе"], correct: 0, legalBasis: {rule: "-", logic: "-"} }];
+    // Если файлы успешно прочитались, убираем дефолтную заглушку и склеиваем полную базу
+    if (tests.length > 0 || tasks.length > 0) {
+      let mixedPool = [];
+      tests.forEach(q => mixedPool.push({ ...q, isTaskItem: false }));
+      tasks.forEach(t => mixedPool.push({ ...t, isTaskItem: true }));
+      
+      AppState.sessionQueue = mixedPool.sort(() => Math.random() - 0.5);
+    } else {
+      AppState.sessionQueue = [{ id: 0, topic: "Инфо", question: "Ошибка: файлы базы данных не найдены на сервере GitHub. Проверьте имена.", options: ["Ок"], correct: 0, legalBasis: {rule: "-", logic: "-"} }];
     }
-
-    let shuffledTests = tests.sort(() => Math.random() - 0.5);
-    AppState.sessionQueue = shuffledTests.map(q => ({ ...q, isTaskItem: false }));
-    AppState.currentIndex = 0;
     
-    if (!filterTopic) {
-      AppState.savedMainSession = { queue: AppState.sessionQueue, index: AppState.currentIndex };
-    }
+    AppState.currentIndex = 0;
     syncStateToStorage();
   }
 
   function restoreMainTestSession() {
-    if (AppState.savedMainSession && AppState.savedMainSession.queue && AppState.savedMainSession.queue.length > 0) {
-      AppState.sessionQueue = AppState.savedMainSession.queue;
-      AppState.currentIndex = AppState.savedMainSession.index || 0;
-    } else {
-      buildSessionQueue();
-    }
-    syncStateToStorage();
+    buildSessionQueue();
     renderCurrentQuestion();
-    closeTopicsModal();
   }
 
   function startErrorReviewSession() {
@@ -701,7 +614,8 @@
 
   function closeTopicsModal() { document.getElementById('topics-modal').style.display = 'none'; }
   function selectTopicBlock(t) { buildSessionQueue(t); renderCurrentQuestion(); closeTopicsModal(); }
-  function toggleHandsFreeMode() { alert("Голосовое сопровождение Safari готово к работе."); }
 
   window.onload = loadExcelAndInit;
 </script>
+</body>
+</html>
