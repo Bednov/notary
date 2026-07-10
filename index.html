@@ -29,7 +29,7 @@
     html, body {
       width: 100%; height: 100dvh; margin: 0; padding: 0;
       background-color: var(--bg-color); color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
       overflow: hidden;
     }
 
@@ -43,7 +43,7 @@
 
     .header-bar {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 6px; background: var(--card-bg); border: 1px solid var(--border-color);
+      margin-bottom: 4px; background: var(--card-bg); border: 1px solid var(--border-color);
       padding: 6px 10px; border-radius: 12px; flex-shrink: 0; gap: 4px;
     }
 
@@ -51,33 +51,24 @@
       font-size: 0.85em; font-weight: 800; color: var(--accent-cyan);
       cursor: pointer; padding: 6px 10px; border-radius: 8px;
       background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3);
-      transition: all 0.2s ease;
     }
-    .brand-title:active { transform: scale(0.95); background: rgba(56, 189, 248, 0.25); }
 
     .pill-btn {
       background: #1e293b; border: 1px solid var(--border-color); color: var(--text-main);
       padding: 6px 10px; border-radius: 16px; font-size: 0.72em; font-weight: 600; cursor: pointer;
     }
-    .pill-btn:active { background: var(--border-color); }
     .pill-btn.exam-btn { background: var(--accent-blue); color: #fff; border-color: var(--accent-cyan); font-weight: 700; }
-    .pill-btn.active-handsfree { background: var(--warning-amber); color: #000; animation: pulse 1.5s infinite; }
 
     #exam-timer-display {
       background: var(--error-red); color: white; padding: 5px 10px; border-radius: 8px;
-      font-weight: 800; font-size: 0.85em; display: none; text-align: center; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+      font-weight: 800; font-size: 0.85em; display: none; text-align: center;
     }
-
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
     .global-progress-wrapper {
       background: var(--card-bg); border: 1px solid var(--border-color);
       border-radius: 10px; padding: 6px 10px; margin-bottom: 6px; flex-shrink: 0;
     }
-    .progress-info-row {
-      display: flex; justify-content: space-between; font-size: 0.7em;
-      font-weight: 700; color: var(--text-muted); margin-bottom: 4px;
-    }
+    .progress-info-row { display: flex; justify-content: space-between; font-size: 0.7em; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
     .progress-bar-bg { width: 100%; height: 8px; background: #0f172a; border-radius: 4px; overflow: hidden; border: 1px solid var(--border-color); }
     .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); border-radius: 4px; transition: width 0.4s ease; }
 
@@ -135,7 +126,6 @@
     <div id="exam-timer-display">60:00</div>
     <div style="display: flex; gap: 4px;">
       <button class="pill-btn exam-btn" onclick="startOfficialExamMode()">⏱️ Билет (50+1)</button>
-      <button class="pill-btn" onclick="toggleHandsFreeMode()" id="handsfree-btn">🎧 Без рук</button>
       <button class="pill-btn" onclick="openTopicsModal()">📚 Темы</button>
       <button class="pill-btn" onclick="resetFullState()" style="color: var(--error-red);">🗑️ Сброс</button>
     </div>
@@ -143,8 +133,8 @@
 
   <section class="global-progress-wrapper">
     <div class="progress-info-row">
-      <span>🚀 Общий освоенный материал:</span>
-      <span id="ui-global-progress-text" style="color: var(--accent-cyan);">0 / 0 (0%)</span>
+      <span>🚀 Общий прогресс базы:</span>
+      <span id="ui-global-progress-text" style="color: var(--accent-cyan);">0 / 0</span>
     </div>
     <div class="progress-bar-bg"><div id="ui-global-progress-bar" class="progress-bar-fill"></div></div>
   </section>
@@ -158,11 +148,11 @@
 
   <article class="quiz-card" id="quiz-card-element">
     <div class="meta-bar">
-      <span class="topic-badge" id="ui-topic-tag">📌 База данных</span>
+      <span class="topic-badge" id="ui-topic-tag">📌 Состояние</span>
       <span class="counter-badge" id="ui-question-counter">0 / 0</span>
     </div>
     <div id="dynamic-content-root">
-      <div style="text-align: center; padding: 25px; color: var(--accent-cyan);">⏳ Синхронизация файлов Word и Excel с GitHub...</div>
+      <div style="text-align: center; padding: 25px; color: var(--accent-cyan);">⏳ Синхронизация файлов на Айфоне...</div>
     </div>
   </article>
 
@@ -177,7 +167,7 @@
 <div class="modal-overlay" id="topics-modal">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; position: sticky; top: 0; background: var(--bg-color); padding: 8px 0; z-index: 10;">
     <h2 style="margin: 0; font-size: 1.1em; color: var(--accent-cyan);">📚 Каталог разделов</h2>
-    <button class="pill-btn" onclick="closeTopicsModal()" style="background: var(--accent-blue); padding: 8px 14px;">Вернуться к тесту</button>
+    <button class="pill-btn" onclick="closeTopicsModal()" style="background: var(--accent-blue); padding: 8px 14px;">К тесту</button>
   </div>
   <div id="topics-list-container"></div>
 </div>
@@ -185,77 +175,6 @@
 <script>
   let isTransitioning = false; 
 
-  /* ГОЛОСОВОЙ ДВИЖОК С СИСТЕМОЙ ПОДДЕРЖКИ SIRI И ЗАЩИТОЙ ДЛЯ IPHONE */
-  const AudioEngine = {
-    ctx: null, enabled: true, speechRate: 1.0, isSpeaking: false, selectedVoice: null,
-    init() {
-      if (!this.ctx) {
-        try {
-          const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          this.ctx = new AudioCtx();
-        } catch(e) { console.log("iOS AudioContext init failed", e); }
-      }
-    },
-    playCorrect() {
-      if (!this.enabled) return; this.init();
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-      osc.connect(gain); gain.connect(this.ctx.destination);
-      osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(659.25, this.ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
-      osc.start(); osc.stop(this.ctx.currentTime + 0.1);
-    },
-    playWrong() {
-      if (!this.enabled) return; this.init();
-      if (!this.ctx) return;
-      const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-      osc.connect(gain); gain.connect(this.ctx.destination);
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(140, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(90, this.ctx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
-      osc.start(); osc.stop(this.ctx.currentTime + 0.15);
-    },
-    speakText(text, callback = null) {
-      if (!('speechSynthesis' in window)) { if(callback) callback(); return; }
-      window.speechSynthesis.cancel();
-      
-      let formattedText = text.replace(/([.,;:!?])/g, "$1 ");
-      const utter = new SpeechSynthesisUtterance(formattedText);
-      utter.lang = 'ru-RU';
-      utter.rate = this.speechRate;
-      
-      if (!this.selectedVoice) {
-        const voices = window.speechSynthesis.getVoices();
-        this.selectedVoice = voices.find(v => v.lang.includes('ru') && (v.name.includes('Siri') || v.name.includes('Voice 2') || v.name.includes('ru-RU-a')))
-                          || voices.find(v => v.lang.includes('ru') && (v.name.includes('Milena') || v.name.includes('Tatiana')))
-                          || voices.find(v => v.lang.includes('ru'));
-      }
-      if (this.selectedVoice) utter.voice = this.selectedVoice;
-
-      this.isSpeaking = true;
-      utter.onend = () => { this.isSpeaking = false; if (callback) callback(); };
-      utter.onerror = () => { this.isSpeaking = false; if (callback) callback(); };
-      window.speechSynthesis.speak(utter);
-    }
-  };
-
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.onvoiceschanged = () => {
-      const voices = window.speechSynthesis.getVoices();
-      AudioEngine.selectedVoice = voices.find(v => v.lang.includes('ru') && (v.name.includes('Siri') || v.name.includes('Voice 2') || v.name.includes('ru-RU-a')));
-    };
-  }
-
-  function toggleSoundEngine() {
-    AudioEngine.enabled = !AudioEngine.enabled;
-    document.getElementById('sound-btn').innerText = AudioEngine.enabled ? "🔊 Звук" : "🔇 Звук";
-  }
-
-  /* ГЕНЕРАТОР ПРАВОВЫХ ССЫЛОК */
   function generateLegalBasis(qText) {
     const text = qText.toLowerCase();
     if (text.includes("наследств") || text.includes("завещ") || text.includes("открыт")) {
@@ -274,21 +193,17 @@
   let TASKS_DATABASE = [];
   const DEFAULT_STATE = { currentIndex: 0, totalAnswered: 0, correctCount: 0, errorIds: [], sessionQueue: [], savedMainSession: null };
   
-  let AppState = JSON.parse(localStorage.getItem('notary_pwa_v3')) || { ...DEFAULT_STATE };
+  let AppState = JSON.parse(localStorage.getItem('notary_pwa_v4')) || { ...DEFAULT_STATE };
   let GlobalMasteredIds = JSON.parse(localStorage.getItem('notary_global_mastered_v3')) || [];
   let RecentRandomShownIds = [];
 
-  let isHandsFreeActive = false;
-  let speechRecognizer = null;
-
-  /* ЭКЗАМЕНАЦИОННЫЕ ДАННЫЕ */
   let isExamMode = false;
   let examCountdown = null;
   let examTimeLeft = 3600; 
   let examScore = { testPoints: 0, taskPoint: 0, argPoints: 0 };
 
   function syncStateToStorage() {
-    localStorage.setItem('notary_pwa_v3', JSON.stringify(AppState));
+    localStorage.setItem('notary_pwa_v4', JSON.stringify(AppState));
     localStorage.setItem('notary_global_mastered_v3', JSON.stringify(GlobalMasteredIds));
     renderDashboardUI();
   }
@@ -305,7 +220,6 @@
     }
   }
 
-  /* РЕЖИМ БИЛЕТА (50+1) */
   function startOfficialExamMode() {
     if (RAW_EXCEL_TESTS.length === 0) { alert("База данных тестов еще подгружается!"); return; }
     
@@ -340,7 +254,7 @@
     AppState.currentIndex = 0;
     syncStateToStorage();
     renderCurrentQuestion();
-    alert("🚀 Режим официального экзамена активирован! 50 тестов + 1 задача запущены. Время пошло!");
+    alert("🚀 Режим официального экзамена активирован! Время пошло.");
   }
 
   function finishOfficialExam() {
@@ -351,18 +265,18 @@
     let isPassed = totalPoints >= 45; 
 
     const root = document.getElementById('dynamic-content-root');
-    document.getElementById('ui-topic-tag').innerText = "🏁 Результаты тестирования";
+    document.getElementById('ui-topic-tag').innerText = "🏁 Результаты билета";
     
     root.innerHTML = `
       <div class="result-screen">
         <div class="verdict-badge ${isPassed ? 'passed' : 'failed'}">${isPassed ? 'СДАЛ' : 'НЕ СДАН'}</div>
-        <h3 style="margin: 10px 0;">Набранный балл: ${totalPoints} из 60 возможных</h3>
+        <h3 style="margin: 10px 0;">Набранный балл: ${totalPoints} из 60</h3>
         <div style="text-align: left; background: #0f172a; padding: 14px; border-radius: 10px; font-size: 0.88em; margin-bottom: 15px; line-height:1.4;">
           <p>🔹 Правильные ответы в тестах: <b style="color:var(--accent-cyan);">${examScore.testPoints}</b> из 50 б.</p>
           <p>🔹 Правильное решение задачи: <b style="color:var(--success-green);">${examScore.taskPoint}</b> из 5 б.</p>
           <p>🔹 Обоснование нормами права: <b style="color:var(--warning-amber);">${examScore.argPoints}</b> из 5 б.</p>
         </div>
-        <button class="nav-btn home-btn" style="width: 100%; padding:14px;" onclick="isExamMode=false; buildSessionQueue(); renderCurrentQuestion();">Вернуться к общему массиву</button>
+        <button class="nav-btn home-btn" style="width: 100%; padding:14px;" onclick="isExamMode=false; buildSessionQueue(); renderCurrentQuestion();">Вернуться к тренировке</button>
       </div>
     `;
     isExamMode = false;
@@ -373,11 +287,11 @@
     document.getElementById('arg-status').innerText = `Начислено: ${points} б.`;
   }
 
-  /* ЖЕЛЕЗОБЕТОННЫЙ ЛИНЕЙНЫЙ ПАРСЕР WORD И EXCEL БЕЗ РЕГУЛЯРОК */
+  /* ЧТЕНИЕ ПЕРЕИМЕНОВАННЫХ ФАЙЛОВ НАПРЯМУЮ БЕЗ ОШИБОК SAFARI */
   async function loadExcelAndInit() {
-    // 1. Чтение Задачи_исправл 29.05.2021.docx
+    // 1. Чтение Чистого Word-файла задачtasks.docx
     try {
-      const respDoc = await fetch(encodeURIComponent('Задачи_исправл 29.05.2021.docx'));
+      const respDoc = await fetch('tasks.docx');
       if (respDoc.ok) {
         const buf = await respDoc.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer: buf });
@@ -394,7 +308,6 @@
             let optsText = block.split("<Варианты ответа>:")[1].split("<Правильный ответ>")[0].trim();
             options = optsText.split("\n").map(o => o.trim()).filter(o => o.length > 0);
           } else {
-            // Если вариантов нет, ищем строки, начинающиеся с цифр
             let lines = block.split("\n");
             lines.forEach(l => {
               let trimmed = l.trim();
@@ -428,11 +341,11 @@
           }
         });
       }
-    } catch(e) { console.log("Word parse task error", e); }
+    } catch(e) { console.log(e); }
 
-    // 2. Чтение Актуальные вопросы в системе с октября 2020 года.xlsx
+    // 2. Чтение Чистого Excel-файла тестов database.xlsx
     try {
-      const respXls = await fetch(encodeURIComponent('Актуальные вопросы в системе с октября 2020 года.xlsx'));
+      const respXls = await fetch('database.xlsx');
       if (respXls.ok) {
         const buf = await respXls.arrayBuffer();
         const wb = XLSX.read(buf, { type: 'array' });
@@ -440,7 +353,7 @@
 
         RAW_EXCEL_TESTS = rawData.map((row, idx) => {
           const options = [];
-          ['Ответ №1', 'Ответ №2', 'Ответ №3', 'Ответ №4', 'Ответ№5', 'Ответ№6'].forEach(col => {
+          ['Ответ №1', 'Ответ №2', 'Ответ №3', 'Ответ №4'].forEach(col => {
             if (row[col] && String(row[col]).trim() !== '') options.push(String(row[col]).trim());
           });
 
@@ -457,11 +370,11 @@
           };
         }).filter(q => q.question && q.options.length > 0);
       }
-    } catch(e) { console.log("Excel parse error", e); }
+    } catch(e) { console.log(e); }
 
-    // 3. Чтение тесты C ответами 2023.docx
+    // 3. Чтение Чистого Word-файла тестов 2023 г. tests2023.docx
     try {
-      const respDoc2 = await fetch(encodeURIComponent('тесты C ответами 2023.docx'));
+      const respDoc2 = await fetch('tests2023.docx');
       if (respDoc2.ok) {
         const buf = await respDoc2.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer: buf });
@@ -492,7 +405,7 @@
       }
     } catch(e) {}
 
-    if (!AppState.sessionQueue || AppState.sessionQueue.length === 0) { buildSessionQueue(); }
+    buildSessionQueue();
     renderCurrentQuestion();
   }
 
@@ -507,12 +420,12 @@
     if (filterTopic === "📋 Задачи квалификационного экзамена") {
       AppState.sessionQueue = tasks.map(t => ({ ...t, isTaskItem: true }));
       AppState.currentIndex = 0;
-      syncStateToStorage();
+      renderCurrentQuestion();
       return;
     }
 
     if (tests.length === 0) {
-      tests = [{ id: 0, topic: "Инфо", question: "Синхронизация завершена. Нажмите кнопку «Микс» для генерации тренировочного пула вопросов.", options: ["Приступить к изучению"], correct: 0, legalBasis: {rule: "-", logic: "-"} }];
+      tests = [{ id: 0, topic: "Инфо", question: "Синхронизация завершена успешно! Нажмите внизу кнопку «Все темы», чтобы загрузить полный пул вопросов.", options: ["Приступить к работе"], correct: 0, legalBasis: {rule: "-", logic: "-"} }];
     }
 
     let shuffledTests = tests.sort(() => Math.random() - 0.5);
@@ -567,9 +480,9 @@
         <div class="task-score-panel">
           <b>🏅 Оценка экспертной аргументации билета (до 5 баллов):</b>
           <div style="margin-top:6px; display:flex; gap:6px; justify-content:center;">
-            <button class="pill-btn" onclick="setArgumentationPoints(1)">1 балл</button>
-            <button class="pill-btn" onclick="setArgumentationPoints(3)">3 балла</button>
-            <button class="pill-btn" onclick="setArgumentationPoints(5)">5 баллов</button>
+            <button class="pill-btn" onclick="setArgumentationPoints(1)">1 б</button>
+            <button class="pill-btn" onclick="setArgumentationPoints(3)">3 б</button>
+            <button class="pill-btn" onclick="setArgumentationPoints(5)">5 б</button>
           </div>
           <div id="arg-status" style="margin-top:5px; font-weight:700; color:var(--warning-amber);">Решение не оценено</div>
         </div>
@@ -591,10 +504,6 @@
     
     document.getElementById('quiz-card-element').scrollTop = 0;
     renderDashboardUI();
-
-    if (isHandsFreeActive) {
-      speakCurrentQuestionAndListen();
-    }
   }
 
   function handleOptionSelect(selectedIdx, correctIdx, qId, btnElement) {
@@ -607,7 +516,6 @@
     if (selectedIdx === correctIdx) {
       AppState.correctCount++;
       if (btnElement) btnElement.classList.add('correct');
-      AudioEngine.playCorrect();
       
       if (!GlobalMasteredIds.includes(qId)) GlobalMasteredIds.push(qId);
 
@@ -622,7 +530,6 @@
       if (!AppState.errorIds.includes(qId)) AppState.errorIds.push(qId);
       if (btnElement) btnElement.classList.add('wrong');
       if (allButtons[correctIdx]) allButtons[correctIdx].classList.add('correct');
-      AudioEngine.playWrong();
       document.getElementById('legal-hint-card').style.display = 'block';
       setTimeout(() => { isTransitioning = false; }, 1000);
     }
@@ -703,7 +610,6 @@
 
   function closeTopicsModal() { document.getElementById('topics-modal').style.display = 'none'; }
   function selectTopicBlock(t) { buildSessionQueue(t); renderCurrentQuestion(); closeTopicsModal(); }
-  function toggleHandsFreeMode() { AudioEngine.init(); alert("Голосовое сопровождение готово к использованию."); }
 
   window.onload = loadExcelAndInit;
 </script>
